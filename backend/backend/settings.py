@@ -26,12 +26,18 @@ SECRET_KEY = 'django-insecure-78t2i5ab48_#lms#y!4+fu_8yt!rfu_h&#1sfne!%$z9s!5h#(
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'jeeya.dhiman.2006@gmail.com'
+EMAIL_HOST_PASSWORD = 'ywit mxqa buia wbus' 
 
 # Application definition
 
 INSTALLED_APPS = [
     'users',
+    'accounts',
     'rest_framework',
     'rest_framework.authtoken',
     'django.contrib.admin',
@@ -143,5 +149,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
-
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
 STATIC_URL = 'static/'

@@ -6,18 +6,33 @@ from .serializers import SignupSerializer
 from rest_framework.authtoken.models import Token
 from .serializers import LoginSerializer
 
+from django.core.cache import cache   # 👈 add this
 
 class SignupView(APIView):
     def post(self, request):
+        email = request.data.get('email')
+
+        # ❌ agar OTP verify nahi hua
+        if not cache.get(email):
+            return Response(
+                {"error": "Email not verified via OTP"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = SignupSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.save()
+
+            # ✅ OTP flag hata de (reuse na ho)
+            cache.delete(email)
+
             return Response(
                 {"message": "User registered successfully"},
                 status=status.HTTP_201_CREATED
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
