@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-<<<<<<< HEAD
 import { CheckCircle, Clock, XCircle } from "lucide-react";
 import "./ResearcherDashboard.css";
 
@@ -18,7 +17,7 @@ const ResearcherDashboard = () => {
     const newEntry = {
       id: datasets.length + 1,
       name: name,
-      date: "20 Mar 2026",
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       url: url,
       status: "Pending"
     };
@@ -29,26 +28,6 @@ const ResearcherDashboard = () => {
 
   return (
     <div className="researcher-dashboard">
-=======
-import {
-  UploadCloud,
-  CheckCircle,
-  Clock,
-  XCircle
-} from "lucide-react";
-import "./ResearcherDashboard.css";
-
-const ResearcherDashboard = () => {
-  const [file, setFile] = useState(null);
-
-  const approvedCount = 12;
-  const pendingCount = 4;
-  const rejectedCount = 2;
-
-  return (
-    <div className="researcher-dashboard">
-      {/* Header */}
->>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
       <header className="dashboard-header">
         <div className="brand-logo">AgriSmart</div>
         <nav className="header-nav">
@@ -58,7 +37,6 @@ const ResearcherDashboard = () => {
         </nav>
       </header>
 
-<<<<<<< HEAD
       <main className="dashboard-content">
         <div className="welcome-header">
           <h2>Welcome Researcher 👋</h2>
@@ -96,49 +74,10 @@ const ResearcherDashboard = () => {
 
           <div className="dashboard-card">
             <h3>Moderation Summary</h3>
-=======
-      {/* Content */}
-      <main className="dashboard-content">
-        <div className="welcome-header">
-          <h2>Welcome Researcher 👋</h2>
-          <p>Upload datasets and track AI moderation results</p>
-        </div>
-
-        {/* Top Grid */}
-        <div className="dashboard-grid-top">
-          {/* Upload Card */}
-          <div className="dashboard-card">
-            <h3>Upload Dataset</h3>
-
-            <form className="upload-form">
-              <label>Dataset Name</label>
-              <input type="text" placeholder="Enter dataset name" />
-
-              <label>Dataset File</label>
-              <div className="file-drop">
-                <UploadCloud size={20} />
-                <span>Click to upload or drag & drop</span>
-                <input
-                  type="file"
-                  onChange={(e) => setFile(e.target.files[0])}
-                  accept=".csv,.xls,.xlsx,.json"
-                />
-              </div>
-
-              <button className="btn-upload">Upload Dataset</button>
-            </form>
-          </div>
-
-          {/* Analytics Card */}
-          <div className="dashboard-card">
-            <h3>Moderation Summary</h3>
-
->>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
             <div className="analytics-summary">
               <div className="analytics-row approved">
                 <CheckCircle size={18} />
                 <span>Approved</span>
-<<<<<<< HEAD
                 <strong>{datasets.filter(d => d.status === "Approved").length}</strong>
               </div>
               <div className="analytics-row pending">
@@ -149,31 +88,14 @@ const ResearcherDashboard = () => {
               <div className="analytics-row rejected">
                 <XCircle size={18} />
                 <span>Rejected</span>
-                <strong>0</strong>
-=======
-                <strong>{approvedCount}</strong>
-              </div>
-
-              <div className="analytics-row pending">
-                <Clock size={18} />
-                <span>Pending</span>
-                <strong>{pendingCount}</strong>
-              </div>
-
-              <div className="analytics-row rejected">
-                <XCircle size={18} />
-                <span>Rejected</span>
-                <strong>{rejectedCount}</strong>
->>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
+                <strong>{datasets.filter(d => d.status === "Rejected").length}</strong>
               </div>
             </div>
           </div>
         </div>
 
-<<<<<<< HEAD
         <div className="dashboard-card datasets-card">
           <h3>Recent Submissions</h3>
-          {/* Table with fixed layout for alignment */}
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr style={{ textAlign: 'left', borderBottom: '1px solid #f4f7fe' }}>
@@ -200,40 +122,6 @@ const ResearcherDashboard = () => {
                   </td>
                 </tr>
               ))}
-=======
-        {/* Table */}
-        <div className="dashboard-card datasets-card">
-          <h3>Uploaded Datasets</h3>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Date</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Soil Data 2024</td>
-                <td>12 Jan 2026</td>
-                <td>
-                  <span className="status-badge status-approved">
-                    Approved
-                  </span>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Crop Yield</td>
-                <td>14 Jan 2026</td>
-                <td>
-                  <span className="status-badge status-pending">
-                    Pending
-                  </span>
-                </td>
-              </tr>
->>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
             </tbody>
           </table>
         </div>
@@ -242,8 +130,4 @@ const ResearcherDashboard = () => {
   );
 };
 
-<<<<<<< HEAD
 export default ResearcherDashboard;
-=======
-export default ResearcherDashboard;
->>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
