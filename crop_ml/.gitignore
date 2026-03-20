@@ -1,0 +1,32 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+
+# ML Models & Data
+*.pkl
+*.joblib
+*.h5
+*.csv
+*.xlsx
+
+# Node / React
+node_modules/
+build/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python packaging
+dist/

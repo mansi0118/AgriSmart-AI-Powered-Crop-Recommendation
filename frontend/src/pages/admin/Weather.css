@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .weather-page {
   background: #f7f5ee;
   min-height: 100vh;
@@ -32,21 +33,83 @@
 
 .date {
   opacity: 0.8;
+=======
+/* PAGE BACKGROUND */
+.weather-page {
+  background: linear-gradient(135deg, #f4f7f2, #eef2ea);
+  min-height: 100vh;
+  padding: 40px;
+  font-family: 'Inter', sans-serif;
+  color: #2f3e2f;
+}
+
+/* HEADER */
+.title {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.location {
+  color: #6b7b6b;
+  margin-bottom: 30px;
+  font-size: 15px;
+}
+
+/* GRID */
+.weather-grid {
+  display: grid;
+  grid-template-columns: 2.3fr 1fr;
+  gap: 25px;
+}
+
+/* MAIN TODAY CARD */
+.today-card {
+  background: linear-gradient(135deg, #6f8f78, #5f8168);
+  color: #fff;
+  padding: 35px;
+  border-radius: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+  transition: 0.3s ease;
+}
+
+.today-card:hover {
+  transform: translateY(-4px);
+}
+
+.date {
+  opacity: 0.85;
+  font-size: 14px;
+  margin-bottom: 10px;
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
 }
 
 .temp-row {
   display: flex;
+<<<<<<< HEAD
   gap: 15px;
+=======
+  gap: 18px;
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
   align-items: center;
 }
 
 .temp-row h2 {
+<<<<<<< HEAD
   font-size: 60px;
   font-weight: 500;
+=======
+  font-size: 72px;
+  font-weight: 300;
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
 }
 
 .condition {
   font-size: 18px;
+<<<<<<< HEAD
 }
 
 .stats {
@@ -72,21 +135,80 @@
   background: #fff;
   padding: 16px;
   border-radius: 14px;
+=======
+  opacity: 0.9;
+}
+
+/* WEATHER STATS */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 30px;
+  font-size: 14px;
+  gap: 15px;
+}
+
+.stats div {
+  background: rgba(255,255,255,0.15);
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+}
+
+.sun {
+  font-size: 100px;
+  opacity: 0.9;
+}
+
+/* SIDE PANEL */
+.side-panel {
+  display: grid;
+  gap: 20px;
+}
+
+/* IMPACT CARDS */
+.impact {
+  background: #fff;
+  padding: 18px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  transition: 0.3s ease;
+}
+
+.impact:hover {
+  transform: translateY(-3px);
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
 }
 
 .impact.green { border-left: 6px solid #6f8f78; }
 .impact.blue { border-left: 6px solid #6fa8dc; }
 .impact.yellow { border-left: 6px solid #e6b566; }
 
+<<<<<<< HEAD
 .sun-moon {
   background: #fff;
   padding: 16px;
   border-radius: 14px;
+=======
+.impact strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* SUN & MOON CARD */
+.sun-moon {
+  background: #fff;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
 }
 
 .sun-box {
   display: flex;
   justify-content: space-between;
+<<<<<<< HEAD
   margin-top: 10px;
 }
 
@@ -104,11 +226,37 @@
   margin-top: 25px;
   padding: 20px;
   border-radius: 16px;
+=======
+  margin-top: 15px;
+}
+
+.sun-box div {
+  background: #f3f6ef;
+  padding: 14px;
+  border-radius: 14px;
+  width: 48%;
+  text-align: center;
+  transition: 0.3s ease;
+}
+
+.sun-box div:hover {
+  background: #e7eddc;
+}
+
+/* HOURLY FORECAST */
+.hourly-box {
+  background: #fff;
+  margin-top: 30px;
+  padding: 22px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
 }
 
 .hours {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
+<<<<<<< HEAD
   gap: 12px;
   margin-top: 15px;
 }
@@ -125,3 +273,44 @@
   background: #e2e8d8;
   font-weight: 600;
 }
+=======
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.hour {
+  background: #f4f7f2;
+  padding: 16px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 14px;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+.hour:hover {
+  background: #e2e8d8;
+  transform: translateY(-3px);
+}
+
+.hour.active {
+  background: #dbe5ce;
+  font-weight: 600;
+  border: 1px solid #c9d6b5;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .weather-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hours {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4

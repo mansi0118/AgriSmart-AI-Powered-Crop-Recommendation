@@ -9,6 +9,10 @@ import {
   Database, FileText, Download // ✅ Database yahan add hona zaroori hai
 } from "lucide-react";
 import "./Users.css";
+<<<<<<< HEAD
+=======
+import Weather from "./Weather";
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
 
 // --- Leaflet Icon Fix ---
 delete L.Icon.Default.prototype._getIconUrl;
@@ -402,6 +406,7 @@ export default function UserDashboard() {
           </div>
         )}
 
+<<<<<<< HEAD
         {/* 2. WEATHER PAGE */}
         {activePage === "weather" && (
           <div className="content-fade-in" key="weather">
@@ -444,6 +449,12 @@ export default function UserDashboard() {
                 </div>
               </div>
             </div>
+=======
+        {/* 2.Weather PAGE */}
+        {activePage === "weather" && (
+           <div className="content-fade-in" key="weather">
+            <Weather />
+>>>>>>> 95c727f253994a2f5f16730bfb9833d553f646d4
           </div>
         )}
 

@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>AgriSmart | Soil Health Analysis</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<style>
+
+body{
+background:#f4f7f9;
+}
+
+.navbar{
+background:#2e7d32 !important;
+}
+
+.card-custom{
+border-radius:15px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+.section-title{
+font-weight:600;
+margin-bottom:15px;
+}
+
+#gauge{
+width:100%;
+height:300px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark">
+
+<div class="container-fluid">
+
+<span class="navbar-brand mb-0 h1">
+🌱 AgriSmart Soil Health Analysis
+</span>
+
+</div>
+
+</nav>
+
+<div class="container mt-4">
+
+<!-- Input Form -->
+
+<div class="card card-custom p-4 mb-4">
+
+<h5 class="section-title">Enter Soil Test Values</h5>
+
+<form action="/soil_predict" method="POST">
+
+<div class="row">
+
+<div class="col-md-3 mb-3">
+<label>Nitrogen</label>
+<input type="number" step="0.01" name="N" class="form-control" required>
+</div>
+
+<div class="col-md-3 mb-3">
+<label>Phosphorus</label>
+<input type="number" step="0.01" name="P" class="form-control" required>
+</div>
+
+<div class="col-md-3 mb-3">
+<label>Potassium</label>
+<input type="number" step="0.01" name="K" class="form-control" required>
+</div>
+
+<div class="col-md-3 mb-3">
+<label>pH</label>
+<input type="number" step="0.01" name="pH" class="form-control" required>
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col-md-3 mb-3">
+<label>EC</label>
+<input type="number" step="0.01" name="EC" class="form-control" required>
+</div>
+
+<div class="col-md-3 mb-3">
+<label>Organic Carbon</label>
+<input type="number" step="0.01" name="OC" class="form-control" required>
+</div>
+
+<div class="col-md-3 mb-3">
+<label>Sulphur</label>
+<input type="number" step="0.01" name="S" class="form-control" required>
+</div>
+
+<div class="col-md-3 mb-3">
+<label>Iron</label>
+<input type="number" step="0.01" name="Fe" class="form-control" required>
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col-md-3 mb-3">
+<label>Zinc</label>
+<input type="number" step="0.01" name="Zn" class="form-control" required>
+</div>
+
+<div class="col-md-3 mb-3">
+<label>Manganese</label>
+<input type="number" step="0.01" name="Mn" class="form-control" required>
+</div>
+
+<div class="col-md-3 mb-3">
+<label>Copper</label>
+<input type="number" step="0.01" name="Cu" class="form-control" required>
+</div>
+
+</div>
+
+<div class="text-center mt-3">
+
+<button type="submit" class="btn btn-success px-5">
+Analyze Soil
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+
+{% if result %}
+
+<!-- Soil Result -->
+
+<div class="row justify-content-center mt-4">
+
+<div class="col-md-6">
+
+<div class="card card-custom text-center p-4">
+
+<h4 class="mb-3">🌱 Soil Health Analysis</h4>
+
+<div id="gauge"></div>
+
+<p class="mt-3 fs-5">
+<strong>Category:</strong> {{ result.category }}
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Suggestions -->
+
+<div class="row justify-content-center mt-3">
+
+<div class="col-md-6">
+
+<div class="card card-custom p-3">
+
+<h6 class="section-title">Soil Improvement Suggestions</h6>
+
+<ul class="list-group list-group-flush">
+
+{% for tip in result.suggestions %}
+
+<li class="list-group-item">
+🌿 {{ tip }}
+</li>
+
+{% endfor %}
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let shiValue = Number("{{ result.shi | tojson }}");
+
+let data = [
+
+{
+type:"indicator",
+mode:"gauge+number",
+value:shiValue,
+
+title:{text:"Soil Health Index"},
+
+gauge:{
+
+axis:{range:[0,100]},
+
+bar:{color:"#2e7d32"},
+
+steps:[
+
+{range:[0,40],color:"#ef5350"},
+{range:[40,70],color:"#ffa726"},
+{range:[70,100],color:"#66bb6a"}
+
+]
+
+}
+
+}
+
+];
+
+let layout={
+width:450,
+height:300,
+margin:{t:30,b:0}
+};
+
+Plotly.newPlot("gauge",data,layout);
+
+</script>
+
+{% endif %}
+
+</div>
+
+</body>
+</html>
