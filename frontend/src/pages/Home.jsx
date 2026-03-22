@@ -18,13 +18,12 @@ const Home = () => {
           </p>
 
           <div className="hero-buttons">
-            {/* Seedhe Login page par bhejne ke liye niche link badal diya hai */}
             <Link to="/login">
               <button className="primary">Get Started</button>
             </Link>
 
-            {/* Guest access */}
-            <Link to="/user/dashboard">
+            {/* ✅ FIXED: /user/dashboard → /guest/dashboard */}
+            <Link to="/guest/dashboard">
               <button className="secondary">Use as Guest</button>
             </Link>
           </div>
@@ -77,7 +76,7 @@ const Home = () => {
       <section className="about">
         <div className="container">
           <p className="about-text">
-            <b>“Grow the right crop, at the right place, at the right time.”</b>
+            <b>"Grow the right crop, at the right place, at the right time."</b>
             <br /><br />
             AgriSmart is an AI-powered crop recommendation system designed to make farming smarter and easier. 
             By simply clicking on a map, users can instantly get the best crop suggestions and soil nutrient insights 
