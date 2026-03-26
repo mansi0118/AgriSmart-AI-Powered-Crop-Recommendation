@@ -41,12 +41,6 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
     .then(data => setUser({ name: data.full_name, email: data.email, role: data.role }))
     .catch(() => setUser({ name: "User", email, role: "" }));
 }, []);
-  // Default Crops
-  const [currentRecommendations, setCurrentRecommendations] = useState([
-    { name: "Wheat", match: "92%", icon: "🌾", color: "green" },
-    { name: "Mustard", match: "87%", icon: "🌻", color: "yellow" },
-    { name: "Chickpea", match: "84%", icon: "🫘", color: "brown" }
-  ]);
 
   // --- 🧠 AI LOGIC TO UPDATE CROPS ---
   const handleGenerate = async () => {
@@ -111,8 +105,67 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
   };
   const [recommendations, setRecommendations] = useState([]);
   const [weather, setWeather] = useState(null);
+  const [dashboardWeather, setDashboardWeather] = useState(null);
   const [activePage, setActivePage] = useState("dashboard");
-  
+  const [place, setPlace] = useState("");
+
+  const handleSearchLocation = async () => {
+  if (!place.trim()) {
+    alert("Please enter a location");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:5000/geocode?place=${place}`
+    );
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    setInputLat(data.lat);
+    setInputLng(data.lon);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+  useEffect(() => {
+  const timeout = setTimeout(() => {
+
+    if (!inputLat || !inputLng) return;
+
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:5000/weather?lat=${inputLat}&lon=${inputLng}`
+        );
+
+        const data = await res.json();
+
+        setDashboardWeather({
+          temp: data.temperature,
+          humidity: data.humidity,
+          rainfall: data.rainfall
+        });
+
+      } catch (err) {
+        console.error("Weather fetch error:", err);
+      }
+    };
+
+    fetchWeather();
+
+  }, 800); // debounce delay
+
+  return () => clearTimeout(timeout);
+
+}, [inputLat, inputLng]);
   // --- 1. FIELDS STATE ---
   const [fields, setFields] = useState([
     { id: 1, name: "North Field", crop: "Wheat", area: "4.2", lat: 27.82, lng: 78.66, color: "green" },
@@ -134,39 +187,6 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
       .then(data => setSoilData(data.Sheet1 || []))
       .catch(err => console.log("Soil Data Error:", err));
   }, []);
-
-  // --- 5. CROPS DATA ---
-  const cropsData = [
-    {
-      id: "wheat", name: "Wheat", season: "Rabi • 120-150 days", match: "92%", icon: "🌾",
-      desc: "Ideal for the current soil conditions. High yield potential.",
-      stats: { water: "Medium", temp: "15-25°C", duration: "120-150 days", soil: "Loamy" },
-      reasons: ["Well-suited for alluvial soil", "Compatible with moisture levels"],
-      tips: ["Sow seeds 2-3 cm deep", "Maintain row spacing 20-22 cm"]
-    },
-    {
-      id: "mustard", name: "Mustard", season: "Rabi • 110-140 days", match: "87%", icon: "🌻",
-      desc: "Excellent option for dry conditions.",
-      stats: { water: "Low", temp: "10-25°C", duration: "110-140 days", soil: "Sandy Loam" },
-      reasons: ["Best suited for low irrigation", "High market demand"],
-      tips: ["Treat seeds with Trichoderma", "Thinning required 15-20 days"]
-    },
-    {
-      id: "chickpea", name: "Chickpea", season: "Rabi • 95-110 days", match: "84%", icon: "🫘",
-      desc: "Nitrogen-fixing crop that improves soil health.",
-      stats: { water: "Very Low", temp: "20-30°C", duration: "95-110 days", soil: "Clay Loam" },
-      reasons: ["Increases soil nitrogen", "Requires minimal fertilizers"],
-      tips: ["Avoid sowing in saline soils", "Use raised bed method"]
-    },
-    {
-      id: "barley", name: "Barley", season: "Rabi • 100-120 days", match: "78%", icon: "🌱",
-      desc: "Hardy crop, highly tolerant to saline soils.",
-      stats: { water: "Low", temp: "12-25°C", duration: "100-120 days", soil: "Saline/Loam" },
-      reasons: ["Tolerates late sowing", "Can grow in problematic soils"],
-      tips: ["Sow in rows 22 cm apart", "Apply split dose of Urea"]
-    }
-  ];
-  const [selectedCrop, setSelectedCrop] = useState(cropsData[0]);
 
   // --- 6. SETTINGS STATE (Editable) ---
   const [settings, setSettings] = useState({
@@ -271,23 +291,86 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
     </header>
 
     <div className="dashboard-grid">
-      <div className="stat-card">
-        <div className="stat-icon sun">☀️</div>
-        <h2>28°C</h2><p>Partly Cloudy</p>
-        <span className="small-alert">Rain expected Wed-Thu</span>
+      
+      <div className="stat-card" style={{ position: "relative", overflow: "hidden" }}>
+  
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: "100%" ,width: "100%"}}>
+        
+          <div>
+            {/* 🔥 TITLE */}
+            <p style={{
+                fontSize: "12px",
+                color: "#9CA3AF",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                marginBottom: "6px"
+              }}>{dashboardWeather ? "Live Weather" : "Loading..."}</p>
+
+            {/* 🔥 TEMP */}
+            <h2 style={{
+              fontSize: "32px",
+              fontWeight: "700",
+              color: "#111827",
+              margin: "0 0 2px"
+              }}>{dashboardWeather ? `${dashboardWeather.temp}°C` : "--"}</h2>
+
+            {/* 🔥 HUMIDITY */}
+            <p style={{
+                fontSize: "14px",
+                color: "#4B5563",
+                margin: "0 0 10px"
+              }}>{dashboardWeather ? `Humidity: ${dashboardWeather.humidity}%` : ""} </p>
+          </div>
+
+          {/* 🔥 ICON */}
+          <div style={{ fontSize: "48px", lineHeight: 1 }}>
+            {dashboardWeather?.rainfall > 20 ? "🌧️" :
+            dashboardWeather?.temp > 30 ? "☀️" : "🌤️"}
+          </div>
+
+        </div>
       </div>
-      <div className="stat-card">
-        <div className="stat-icon leaf">🌱</div>
-        <h2>3 Fields</h2><p>Active this season</p>
-        <span className="small-alert">All fields healthy</span>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon trend">📈</div>
-        <h2>Good</h2><p>Soil health status</p>
-        <span className="small-alert">Consider adding phosphorus</span>
+      <div className="stat-card" style={{ 
+        position: "relative", 
+        overflow: "hidden",
+        padding: "30px"}}>
+
+        <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: "600" }}>
+          Enter Location
+        </p>
+
+        <input
+          type="text"
+          placeholder="Enter city / village"
+          value={place}
+          onChange={(e) => setPlace(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "1px solid #eee",
+            marginTop: "10px"
+          }}
+        />
+
+        <button
+          onClick={handleSearchLocation}
+          style={{
+            marginTop: "10px",
+            padding: "10px",
+            width: "100%",
+            background: "#7da07d",
+            color: "white",
+            border: "none",
+            borderRadius: "8px"
+          }}
+        >
+          Get Coordinates
+        </button>
+
       </div>
     </div>
-
     <div className="lower-grid">
       
       {/* --- LEFT: FIELD LOCATION & INPUTS --- */}

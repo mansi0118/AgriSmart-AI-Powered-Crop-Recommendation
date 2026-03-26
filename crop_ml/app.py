@@ -50,7 +50,7 @@ def get_weather(lat, lon):
     url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
 
     try:
-        res = requests.get(url)
+        res = requests.get(url,timeout=5)
         data = res.json()
 
         if res.status_code != 200:
@@ -70,7 +70,7 @@ def get_weather_by_city(city):
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
 
     try:
-        res = requests.get(url)
+        res = requests.get(url,timeout=5)
         data = res.json()
 
         if res.status_code != 200:
@@ -92,7 +92,7 @@ def get_rainfall_forecast(lat, lon):
     url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={api_key}&units=metric"
 
     try:
-        res = requests.get(url)
+        res = requests.get(url,timeout=5)
         data = res.json()
 
         if res.status_code != 200:
@@ -115,7 +115,7 @@ def get_rainfall_forecast_by_city(city):
     url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric"
 
     try:
-        res = requests.get(url)
+        res = requests.get(url,timeout=5)
         data = res.json()
 
         if res.status_code != 200:
@@ -423,7 +423,62 @@ def soil_health_api():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+@app.route('/weather', methods=['GET'])
+def weather_only():
+    try:
+        lat = request.args.get('lat')
+        lon = request.args.get('lon')
 
+        # ✅ validation
+        if not lat or not lon:
+            return jsonify({"error": "Latitude and Longitude required"})
+
+        lat = float(lat)
+        lon = float(lon)
+
+        # ✅ existing functions use karo
+        temp, humidity = get_weather(lat, lon)
+        rainfall = get_rainfall_forecast(lat, lon)
+        city = get_city_cached(lat, lon)
+
+        if temp is None:
+            return jsonify({"error": "Weather fetch failed"})
+        if rainfall is None:
+            rainfall = 0
+        return jsonify({
+            "temperature": float(temp),
+            "humidity": float(humidity),
+            "rainfall": float(rainfall) if rainfall else 0,
+            "city": city
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/geocode', methods=['GET'])
+def geocode():
+    try:
+        place = request.args.get('place')
+
+        if not place:
+            return jsonify({"error": "Place is required"})
+
+        url = f"https://nominatim.openstreetmap.org/search?q={place}&format=json"
+
+        res = requests.get(url, headers={"User-Agent": "agri-smart-app"},verify=False,timeout=5)
+        data = res.json()
+
+        if not data:
+            return jsonify({"error": "Location not found"})
+
+        return jsonify({
+            "lat": data[0]["lat"],
+            "lon": data[0]["lon"],
+            "display_name": data[0]["display_name"]
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
 # ---------------------------------
 # RUN
 # ---------------------------------
