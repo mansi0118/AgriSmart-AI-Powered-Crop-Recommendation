@@ -42,3 +42,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+from django.conf import settings
+
+user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+class Researcher(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    url = models.TextField()
+    date = models.DateField()
+
+    def __str__(self):
+        return self.name
