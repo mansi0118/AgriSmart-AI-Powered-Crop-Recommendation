@@ -16,7 +16,7 @@ const Dashboard = () => {
         <button
   className="primary-btn"
   onClick={() => navigate("/admin/dashboard/settings")}
->
+> 
   View Settings
 </button>
 

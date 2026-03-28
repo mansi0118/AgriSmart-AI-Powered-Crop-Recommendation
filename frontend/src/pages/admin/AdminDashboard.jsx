@@ -58,9 +58,41 @@ const AdminDashboard = () => {
   const [notifications, setNotifications] = useState({ email: true, push: false, weekly: true });
   
   // Save Handler (Mock)
-  const handleSaveSettings = () => {
-    alert("Settings saved successfully! ✅");
-  };
+  const handleSaveSettings = async () => {
+  setIsSaving(true);
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("http://127.0.0.1:8000/api/users/update_user/", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`
+      },
+      body: JSON.stringify({
+        full_name: settings.name,
+        email: settings.email,
+        phone: settings.phone,
+        region: settings.region
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("✅ Saved to backend!");
+    } else {
+      alert(data.error || "Something went wrong");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Error saving settings ❌");
+  }
+
+  setIsSaving(false);
+};
 // --- YE STYLE OBJECT MISSING THA ---
  const s = {
     container: { display: 'flex', minHeight: '100vh', fontFamily: "'Inter', sans-serif", background: '#f1f5f9' },

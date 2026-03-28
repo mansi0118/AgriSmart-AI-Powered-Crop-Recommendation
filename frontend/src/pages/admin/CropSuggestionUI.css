@@ -1,90 +1,128 @@
 /* 🌿 Container */
 .crop-container {
   padding: 30px;
+  min-height: 100vh;
+  background: #f5f3ef;
 }
 
 /* 📦 Card */
 .crop-card-ui {
-  background: white;
-  padding: 25px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  margin-bottom: 20px;
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+  transition: all 0.25s ease;
+}
+
+.crop-card-ui:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
 
 /* 🧾 Title */
 .crop-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 15px;
+  color: #2f2f2f;
+  margin-bottom: 18px;
 }
 
-/* 🧱 Grid */
+/* 🧱 Form Layout */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
 }
 
-/* 🧾 Input */
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
+/* 📋 Labels */
 .form-group label {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 5px;
+  font-size: 12px;
+  color: #7a7a7a;
+  margin-bottom: 6px;
 }
 
+/* 🧾 Inputs */
 .form-group input {
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  outline: none;
-  transition: 0.2s;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid #e3e3e3;
+  background: #fafafa;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .form-group input:focus {
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 2px rgba(76,175,80,0.2);
+  border-color: #7aa874;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(122,168,116,0.15);
+  outline: none;
 }
 
 /* 🌿 Button */
 .crop-btn {
-  background: #4CAF50;
+  background: #7aa874;
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 10px;
-  margin-top: 15px;
+  padding: 13px;
+  border-radius: 14px;
+  margin-top: 22px;
   width: 100%;
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .crop-btn:hover {
-  background: #43a047;
+  background: #6a9665;
+  transform: translateY(-1px);
 }
 
-/* 📊 Result */
+/* 📊 Result Layout */
 .result-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
+  margin-top: 20px;
+}
+
+/* 📋 Text spacing */
+.crop-card-ui p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #444;
 }
 
 /* 📈 Progress */
 .progress-bar-ui {
-  height: 8px;
+  height: 6px;
   border-radius: 10px;
   background: #eee;
+  margin-top: 6px;
   overflow: hidden;
-  margin-top: 5px;
 }
 
 .progress-fill {
   height: 100%;
-  background: #4CAF50;
+  background: #7aa874;
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+
+/* 📱 Responsive (IMPORTANT) */
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }

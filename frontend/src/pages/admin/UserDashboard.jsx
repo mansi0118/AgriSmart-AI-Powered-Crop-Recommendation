@@ -4,7 +4,8 @@ import SoilHealthUI from "./SoilHealthUI";
 import Weather from "./Weather";
 // ✅ FIX 1: Rectangle import kiya
 import { MapContainer, TileLayer, Marker, Popup, Rectangle } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css'; 
+import 'leaflet/dist/leaflet.css';
+import { useMapEvents } from "react-leaflet"; 
 import L from 'leaflet'; 
 import { 
   Cloud, Sun, Wind, Eye, Gauge, Map, Settings, 
@@ -21,10 +22,10 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function UserDashboard() {
-  // ✅ FIX 2: SAARA STATE AUR LOGIC IS FUNCTION KE ANDAR HOGA
-  // --- 🆕 LOCATION & RECOMMENDATION STATE ---
+  
   const [inputLat, setInputLat] = useState("27.80");
   const [inputLng, setInputLng] = useState("78.65");
+  const [researchData, setResearchData] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false); // Loading state
 
 const [user, setUser] = useState({ name: "", email: "", role: "" });
@@ -39,49 +40,205 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
     .then(data => setUser({ name: data.full_name, email: data.email, role: data.role }))
     .catch(() => setUser({ name: "User", email, role: "" }));
 }, []);
-  // Default Crops
-  const [currentRecommendations, setCurrentRecommendations] = useState([
-    { name: "Wheat", match: "92%", icon: "🌾", color: "green" },
-    { name: "Mustard", match: "87%", icon: "🌻", color: "yellow" },
-    { name: "Chickpea", match: "84%", icon: "🫘", color: "brown" }
-  ]);
+  useEffect(() => {
+  fetch("http://127.0.0.1:8000/api/researcher/1/")
+    .then(res => res.json())
+    .then(data => setResearchData(data))
+    .catch(err => console.error("Research fetch error:", err));
+}, []);
 
-  // --- 🧠 FAKE AI LOGIC TO UPDATE CROPS ---
-  const handleAnalyzeLocation = () => {
-    setIsAnalyzing(true); // Loading shuru
+  // --- 🧠 AI LOGIC TO UPDATE CROPS ---
+  const handleGenerate = async () => {
+  try {
+    setIsAnalyzing(true);
+    let payload = {};
 
-    // 1.5 Second ka delay taaki lage AI soch raha hai
-    setTimeout(() => {
-      const lat = parseFloat(inputLat);
-      
-      // Simple Logic: Agar Latitude 28 se zyada hai toh alag crops, nahi toh default
-      if (lat > 28.00) {
-        setCurrentRecommendations([
-          { name: "Barley", match: "95%", icon: "🌱", color: "green" },
-          { name: "Potato", match: "88%", icon: "🥔", color: "yellow" },
-          { name: "Peas", match: "82%", icon: "🟢", color: "green" }
-        ]);
-      } else if (lat < 27.00) {
-        setCurrentRecommendations([
-          { name: "Rice", match: "91%", icon: "🍚", color: "green" },
-          { name: "Sugarcane", match: "86%", icon: "🎋", color: "yellow" },
-          { name: "Maize", match: "79%", icon: "🌽", color: "yellow" }
-        ]);
-      } else {
-        // Wapis Default (Kasganj area)
-        setCurrentRecommendations([
-          { name: "Wheat", match: "92%", icon: "🌾", color: "green" },
-          { name: "Mustard", match: "87%", icon: "🌻", color: "yellow" },
-          { name: "Chickpea", match: "84%", icon: "🫘", color: "brown" }
-        ]);
+    // ✅ CASE 1: lat/lon available
+    if (inputLat && inputLng) {
+      if (isNaN(inputLat) || isNaN(inputLng)) {
+      alert("Please enter valid numeric latitude and longitude");
+      return;
       }
-      
-      setIsAnalyzing(false); // Loading khatam
-      alert(`📍 Location Analyzed: ${inputLat}, ${inputLng}\n✅ Recommendations Updated!`);
-    }, 1500);
+      payload = {
+        latitude: parseFloat(inputLat),
+        longitude: parseFloat(inputLng)
+      };
+    } 
+    
+    // ✅ CASE 2: manual input
+    else {
+      payload = {
+        Nitrogen: Number(n),
+        Phosphorus: Number(p),
+        Potassium: Number(k),
+        Ph: Number(ph)
+      };
+    }
+
+    const res = await fetch("http://127.0.0.1:5000/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    console.log("API RESPONSE:", data);
+
+    // ✅ Save response to state
+    setRecommendations(data.recommendations);
+    setWeather({
+    temp: data.temperature,
+    humidity: data.humidity,
+    rainfall: data.rainfall,
+    city: data.city
+    });
+
+  } catch (err) {
+    console.error("Error:", err);
+  }
+  finally{
+    setIsAnalyzing(false);
+  }
   };
+  const handleSaveSettings = async () => {
+  setIsSaving(true);
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("http://127.0.0.1:8000/api/users/update_user/", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`
+      },
+      body: JSON.stringify({
+        full_name: settings.name,
+        email: settings.email,
+        phone: settings.phone,
+        region: settings.region
+      })
+    });
+
+    if (res.ok) {
+      alert("✅ Saved successfully!");
+    } else {
+      alert("Error saving ❌");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
+
+  setIsSaving(false);
+};
+  const [recommendations, setRecommendations] = useState([]);
+  const [weather, setWeather] = useState(null);
+  const [dashboardWeather, setDashboardWeather] = useState(null);
   const [activePage, setActivePage] = useState("dashboard");
+  const [place, setPlace] = useState("");
+  const [selectedSoil, setSelectedSoil] = useState(null);
   
+  function MapClickHandler() {
+  useMapEvents({
+    click(e) {
+      setInputLat(e.latlng.lat.toFixed(4));
+      setInputLng(e.latlng.lng.toFixed(4));
+    }
+  });
+  return null;
+  }
+  
+  const getCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude.toFixed(4);
+      const lng = position.coords.longitude.toFixed(4);
+
+      setInputLat(lat);
+      setInputLng(lng);
+
+      console.log("User Location:", lat, lng);
+    },
+    (error) => {
+      alert("Location access denied ❌");
+      console.error(error);
+    }
+  );
+};
+
+
+  const handleSearchLocation = async () => {
+  if (!place.trim()) {
+    alert("Please enter a location");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:5000/geocode?place=${place}`
+    );
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    setInputLat(data.lat);
+    setInputLng(data.lon);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+  useEffect(() => {
+  const timeout = setTimeout(() => {
+
+    if (!inputLat || !inputLng) return;
+
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:5000/weather?lat=${inputLat}&lon=${inputLng}`
+        );
+
+        const data = await res.json();
+
+        setDashboardWeather({
+          temp: data.temperature,
+          humidity: data.humidity,
+          rainfall: data.rainfall
+        });
+
+      } catch (err) {
+        console.error("Weather fetch error:", err);
+      }
+    };
+
+    fetchWeather();
+
+  }, 800); // debounce delay
+
+  return () => clearTimeout(timeout);
+
+}, [inputLat, inputLng]);
   // --- 1. FIELDS STATE ---
   const [fields, setFields] = useState([
     { id: 1, name: "North Field", crop: "Wheat", area: "4.2", lat: 27.82, lng: 78.66, color: "green" },
@@ -103,39 +260,6 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
       .then(data => setSoilData(data.Sheet1 || []))
       .catch(err => console.log("Soil Data Error:", err));
   }, []);
-
-  // --- 5. CROPS DATA ---
-  const cropsData = [
-    {
-      id: "wheat", name: "Wheat", season: "Rabi • 120-150 days", match: "92%", icon: "🌾",
-      desc: "Ideal for the current soil conditions. High yield potential.",
-      stats: { water: "Medium", temp: "15-25°C", duration: "120-150 days", soil: "Loamy" },
-      reasons: ["Well-suited for alluvial soil", "Compatible with moisture levels"],
-      tips: ["Sow seeds 2-3 cm deep", "Maintain row spacing 20-22 cm"]
-    },
-    {
-      id: "mustard", name: "Mustard", season: "Rabi • 110-140 days", match: "87%", icon: "🌻",
-      desc: "Excellent option for dry conditions.",
-      stats: { water: "Low", temp: "10-25°C", duration: "110-140 days", soil: "Sandy Loam" },
-      reasons: ["Best suited for low irrigation", "High market demand"],
-      tips: ["Treat seeds with Trichoderma", "Thinning required 15-20 days"]
-    },
-    {
-      id: "chickpea", name: "Chickpea", season: "Rabi • 95-110 days", match: "84%", icon: "🫘",
-      desc: "Nitrogen-fixing crop that improves soil health.",
-      stats: { water: "Very Low", temp: "20-30°C", duration: "95-110 days", soil: "Clay Loam" },
-      reasons: ["Increases soil nitrogen", "Requires minimal fertilizers"],
-      tips: ["Avoid sowing in saline soils", "Use raised bed method"]
-    },
-    {
-      id: "barley", name: "Barley", season: "Rabi • 100-120 days", match: "78%", icon: "🌱",
-      desc: "Hardy crop, highly tolerant to saline soils.",
-      stats: { water: "Low", temp: "12-25°C", duration: "100-120 days", soil: "Saline/Loam" },
-      reasons: ["Tolerates late sowing", "Can grow in problematic soils"],
-      tips: ["Sow in rows 22 cm apart", "Apply split dose of Urea"]
-    }
-  ];
-  const [selectedCrop, setSelectedCrop] = useState(cropsData[0]);
 
   // --- 6. SETTINGS STATE (Editable) ---
   const [settings, setSettings] = useState({
@@ -186,14 +310,6 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
     setNewField({ name: "", crop: "", area: "", lat: "", lng: "" });
   };
 
-  const handleSaveSettings = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      alert("✅ Settings Saved Successfully!");
-    }, 1000);
-  };
-
   return (
     <div className="app-container">
       {/* SIDEBAR */}
@@ -240,23 +356,100 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
     </header>
 
     <div className="dashboard-grid">
-      <div className="stat-card">
-        <div className="stat-icon sun">☀️</div>
-        <h2>28°C</h2><p>Partly Cloudy</p>
-        <span className="small-alert">Rain expected Wed-Thu</span>
+      
+      <div className="stat-card" style={{ position: "relative", overflow: "hidden" }}>
+  
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: "100%" ,width: "100%"}}>
+        
+          <div>
+            {/* 🔥 TITLE */}
+            <p style={{
+                fontSize: "12px",
+                color: "#9CA3AF",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                marginBottom: "6px"
+              }}>{dashboardWeather ? "Live Weather" : "Loading..."}</p>
+
+            {/* 🔥 TEMP */}
+            <h2 style={{
+              fontSize: "32px",
+              fontWeight: "700",
+              color: "#111827",
+              margin: "0 0 2px"
+              }}>{dashboardWeather ? `${dashboardWeather.temp}°C` : "--"}</h2>
+
+            {/* 🔥 HUMIDITY */}
+            <p style={{
+                fontSize: "14px",
+                color: "#4B5563",
+                margin: "0 0 10px"
+              }}>{dashboardWeather ? `Humidity: ${dashboardWeather.humidity}%` : ""} </p>
+          </div>
+
+          {/* 🔥 ICON */}
+          <div style={{ fontSize: "48px", lineHeight: 1 }}>
+            {dashboardWeather?.rainfall > 20 ? "🌧️" :
+            dashboardWeather?.temp > 30 ? "☀️" : "🌤️"}
+          </div>
+
+        </div>
       </div>
-      <div className="stat-card">
-        <div className="stat-icon leaf">🌱</div>
-        <h2>3 Fields</h2><p>Active this season</p>
-        <span className="small-alert">All fields healthy</span>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon trend">📈</div>
-        <h2>Good</h2><p>Soil health status</p>
-        <span className="small-alert">Consider adding phosphorus</span>
+      <div className="stat-card" style={{ 
+        position: "relative", 
+        overflow: "hidden",
+        padding: "30px"}}>
+
+        <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: "600" }}>
+          Enter Location
+        </p>
+
+        <input
+          type="text"
+          placeholder="Enter city / village"
+          value={place}
+          onChange={(e) => setPlace(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "1px solid #eee",
+            marginTop: "10px"
+          }}
+        />
+        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+        <button
+          onClick={handleSearchLocation}
+          style={{
+            flex: 1,
+            padding: "10px",
+            background: "#7da07d",
+            color: "white",
+            border: "none",
+            borderRadius: "8px"
+          }}
+        >
+          🌍 Get Coordinates
+        </button>
+        <button
+          onClick={getCurrentLocation}
+          style={{
+            flex: 1,
+            padding: "10px",
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: "8px"
+          }}
+        >
+          📍 Use My Location
+        </button>
+        </div>
+
+
       </div>
     </div>
-
     <div className="lower-grid">
       
       {/* --- LEFT: FIELD LOCATION & INPUTS --- */}
@@ -274,7 +467,7 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
               type="number" 
               value={inputLat} 
               onChange={(e) => setInputLat(e.target.value)} 
-              placeholder="27.80"
+              placeholder="Latitude"
             />
           </div>
           <div className="input-group">
@@ -283,7 +476,7 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
               type="number" 
               value={inputLng} 
               onChange={(e) => setInputLng(e.target.value)} 
-              placeholder="78.65"
+              placeholder="Longitude"
             />
           </div>
         </div>
@@ -291,7 +484,7 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
         {/* ✨ NEW BIG GENERATE BUTTON ✨ */}
         <button 
           className="generate-btn" 
-          onClick={handleAnalyzeLocation}
+          onClick={handleGenerate}
           disabled={isAnalyzing}
         >
           {isAnalyzing ? (
@@ -327,14 +520,22 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
         ) : (
           <>
             <div className="crop-list">
-              {currentRecommendations.map((crop, index) => (
+              {recommendations.map((item, index) => (
                 <div key={index} className="crop-card">
-                  <span className="crop-emoji">{crop.icon}</span>
-                  <strong>{crop.name}</strong>
-                  <p>{crop.match} match</p>
+                  <span className="crop-emoji">🌱</span>
+                  <strong>{item.crop}</strong>
+                  <p>{item.confidence}% confidence</p>
                 </div>
               ))}
             </div>
+            {weather && (
+            <div className="weather-info">
+              <p>📍 City: {weather.city}</p>
+              <p>🌡 Temp: {weather.temp}°C</p>
+              <p>💧 Humidity: {weather.humidity}%</p>
+              <p>🌧 Rainfall: {weather.rainfall} mm</p>
+            </div>
+            )}
             <div className="why-crops">
               <h4>Why these crops?</h4>
               <ul>
@@ -376,39 +577,73 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
                         <th style={{padding: "15px 0", textAlign: "right"}}>Action</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {/* Dummy Data for Table */}
-                      {[
-                        { id: 1, date: "16 Jan 2026", name: "Dr. A.K. Sharma", title: "Soil Nutrient Map - Kasganj Block A", status: "New" },
-                        { id: 2, date: "14 Jan 2026", name: "IARI Lab Team", title: "Rabi Season Pest Outbreak Report", status: "Verified" },
-                        { id: 3, date: "10 Jan 2026", name: "Dr. Priya Verma", title: "Groundwater Levels Q4 2025", status: "Pending" },
-                        { id: 4, date: "05 Jan 2026", name: "Agri Dept. UP", title: "Revised MSP List 2026", status: "Verified" },
-                      ].map((item) => (
-                        <tr key={item.id} style={{borderBottom: "1px solid #f9f9f9", fontSize: "14px", color: "#333"}}>
-                          <td style={{padding: "15px 0", color: "#666"}}>{item.date}</td>
-                          <td style={{padding: "15px 0", fontWeight: "600"}}>{item.name}</td>
-                          <td style={{padding: "15px 0"}}>
-                            <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
-                              <FileText size={16} color="#7da07d"/> {item.title}
-                            </div>
-                          </td>
-                          <td style={{padding: "15px 0"}}>
-                            <span style={{
-                              padding: "5px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600",
-                              background: item.status === "New" ? "#e3f2fd" : item.status === "Verified" ? "#e8f5e9" : "#fff3e0",
-                              color: item.status === "New" ? "#1976d2" : item.status === "Verified" ? "#2e7d32" : "#ed6c02"
-                            }}>
-                              {item.status}
-                            </span>
-                          </td>
-                          <td style={{padding: "15px 0", textAlign: "right"}}>
-                            <button className="save-btn" style={{padding: "8px 15px", fontSize: "12px", display:"inline-flex", gap:"5px", alignItems:"center"}} onClick={() => alert(`Downloading: ${item.title}`)}>
-                              <Download size={14}/> Download
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+                   <tbody>
+  {researchData.length === 0 ? (
+    <tr>
+      <td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>
+        No datasets available 🚀
+      </td>
+    </tr>
+  ) : (
+    researchData.map((item) => (
+      <tr
+        key={item.id}
+        style={{
+          borderBottom: "1px solid #f9f9f9",
+          fontSize: "14px",
+          color: "#333"
+        }}
+      >
+        <td style={{ padding: "15px 0", color: "#666" }}>
+          {item.date}
+        </td>
+
+        <td style={{ padding: "15px 0", fontWeight: "600" }}>
+          User {item.user_id}
+        </td>
+
+        <td style={{ padding: "15px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <FileText size={16} color="#7da07d" />
+            {item.name}
+          </div>
+        </td>
+
+        <td style={{ padding: "15px 0" }}>
+          <span
+            style={{
+              padding: "5px 12px",
+              borderRadius: "20px",
+              fontSize: "12px",
+              fontWeight: "600",
+              background: "#e8f5e9",
+              color: "#2e7d32"
+            }}
+          >
+            Available
+          </span>
+        </td>
+
+        <td style={{ padding: "15px 0", textAlign: "right" }}>
+          <a href={item.url} target="_blank" rel="noopener noreferrer">
+            <button
+              className="save-btn"
+              style={{
+                padding: "8px 15px",
+                fontSize: "12px",
+                display: "inline-flex",
+                gap: "5px",
+                alignItems: "center"
+              }}
+            >
+              <Download size={14} /> Download
+            </button>
+          </a>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
                   </table>
                 </div>
               </div>
@@ -418,121 +653,295 @@ fetch(`http://127.0.0.1:8000/api/users/get_user_by_email/${email}/`, {
 
         {/* 2. WEATHER PAGE */}
         {activePage === "weather" && (
-  <div className="content-fade-in" key="weather">
-    <Weather />
-  </div>
-)}
+          <div className="content-fade-in" key="weather">
+            <Weather />
+          </div>
+        )}
         {/* 3. FIELD MAP PAGE */}
         {activePage === "fieldMap" && (
           <div className="content-fade-in" key="fieldMap">
             <header className="page-header-flex">
-              <div><h1>Field Map</h1><p>Soil Health Analysis & Field Management</p></div>
-              <button className="add-field-btn" onClick={() => setShowModal(true)}>+ Add Field</button>
+              <div>
+                <h1>Field Map</h1>
+                <p>Soil Health Analysis & Field Management</p>
+              </div>
+              <button className="add-field-btn" onClick={() => setShowModal(true)}>
+                + Add Field
+              </button>
             </header>
 
             <div className="map-grid-layout">
               <div className="map-main-area">
-                <div className="coord-bar" style={{justifyContent: 'space-between'}}>
-                  <div style={{display:'flex', gap:'10px'}}>
-                      <div className="input-box"><label>LAT</label><input type="text" value="27.80" readOnly /></div>
-                      <div className="input-box"><label>LNG</label><input type="text" value="78.65" readOnly /></div>
+
+                {/* TOP BAR */}
+                <div className="coord-bar" style={{ justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <div className="input-box">
+                      <label>LATITUDE</label>
+                      <input type="text" placeholder="Enter latitude" value={inputLat} onChange={(e) => setInputLat(e.target.value)}  />
+                    </div>
+                    <div className="input-box">
+                      <label>LONGITUDE</label>
+                      <input type="text" placeholder="Enter longitude" value={inputLng} onChange={(e) => setInputLng(e.target.value)} />
+                    </div>
+                    <button 
+                        onClick={getCurrentLocation}
+                        style={{
+                          height: "40px",
+                          marginTop: "20px",
+                          padding: "0 12px",
+                          background: "#2563eb",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        📍 Use My Location
+                      </button>
                   </div>
+
                   <div className="nutrient-select-box">
-                      <label>Show Layer:</label>
-                      <select value={nutrient} onChange={(e) => setNutrient(e.target.value)}>
-                          <option value="N">Nitrogen (N)</option>
-                          <option value="P">Phosphorus (P)</option>
-                          <option value="K">Potassium (K)</option>
-                          <option value="pH">Soil pH</option>
-                      </select>
+                    <label>Show Layer:</label>
+                    <select value={nutrient} onChange={(e) => setNutrient(e.target.value)}>
+                      <option value="N">Nitrogen (N)</option>
+                      <option value="P">Phosphorus (P)</option>
+                      <option value="K">Potassium (K)</option>
+                      <option value="pH">Soil pH</option>
+                    </select>
                   </div>
                 </div>
-                
-                <div className="interactive-map-container" style={{position: 'relative'}}>
-                  <MapContainer 
-                    center={[27.8083, 78.6458]} 
-                    zoom={13} 
-                    scrollWheelZoom={false} 
+
+                {/* MAP */}
+                <div className="interactive-map-container" style={{ position: "relative" }}>
+
+                  {/* 💡 Instruction */}
+                  <div style={{
+                    position: "absolute",
+                    top: "20px",
+                    right: "20px",
+                    background: "#fff",
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                    zIndex: 1000
+                  }}>
+                    Click on map to select location 📍
+                  </div>
+
+                  <MapContainer
+                    key={`${inputLat}-${inputLng}`}
+                    center={[parseFloat(inputLat) || 27.8083, parseFloat(inputLng) || 78.6458]}
+                    zoom={13}
+                    scrollWheelZoom={false}
                     style={{ height: "100%", width: "100%", borderRadius: "20px" }}
                   >
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-                    
-                    {/* SOIL LAYERS */}
+
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution="&copy; OpenStreetMap"
+                    />
+
+                    {/* ✅ CLICK HANDLER */}
+                    <MapClickHandler />
+
+                    {/* 📍 SELECTED MARKER */}
+                    <Marker position={[parseFloat(inputLat), parseFloat(inputLng)]}>
+                      <Popup>📍 Selected Location</Popup>
+                    </Marker>
+
+                    {/* 🌱 SOIL LAYERS */}
                     {soilData.map((cell, idx) => {
-                       const size = 0.003;
-                       const key = nutrient === "N" ? "n" : nutrient === "P" ? "p" : nutrient === "K" ? "k" : "pH";
-                       const val = cell[key];
-                       const color = getColor(val, nutrient);
-                       if(!val) return null;
-                       return (
-                         <Rectangle
-                           key={idx}
-                           bounds={[[cell.Latitude - size, cell.Longitude - size],[cell.Latitude + size, cell.Longitude + size]]}
-                           pathOptions={{ color: color, fillColor: color, fillOpacity: 0.5, weight: 0 }}
-                         >
-                            <Popup><strong>Soil Data</strong><br/>{nutrient}: {val}</Popup>
-                         </Rectangle>
-                       )
+                      const size = 0.003;
+                      const key =
+                        nutrient === "N"
+                          ? "n"
+                          : nutrient === "P"
+                          ? "p"
+                          : nutrient === "K"
+                          ? "k"
+                          : "pH";
+
+                      const val = cell[key];
+                      const color = getColor(val, nutrient);
+                      if (!val) return null;
+
+                      return (
+                        <Rectangle
+                          key={idx}
+                          bounds={[
+                            [cell.Latitude - size, cell.Longitude - size],
+                            [cell.Latitude + size, cell.Longitude + size]
+                          ]}
+                          pathOptions={{
+                            color: color,
+                            fillColor: color,
+                            fillOpacity: 0.5,
+                            weight: 0
+                          }}
+                          eventHandlers={{
+                            click: () => {
+                              setSelectedSoil({
+                                lat: cell.Latitude,
+                                lng: cell.Longitude,
+                                value: val,
+                                type: nutrient
+                              });
+                            }
+                          }}
+                        >
+                          <Popup>
+                            <strong>Soil Data</strong><br />
+                            {nutrient}: {val}
+                          </Popup>
+                        </Rectangle>
+                      );
                     })}
 
-                    {/* USER FIELDS */}
-                    {fields.map(field => (
+                    {/* 📍 USER FIELDS */}
+                    {fields.map((field) => (
                       <Marker key={field.id} position={[field.lat, field.lng]}>
-                        <Popup><strong>{field.name}</strong><br />{field.crop}</Popup>
+                        <Popup>
+                          <strong>{field.name}</strong><br />
+                          {field.crop}
+                        </Popup>
                       </Marker>
+                    ))}
+
+                    {/* 🔵 FIELD BOUNDARIES */}
+                    {fields.map((field) => (
+                      <Rectangle
+                        key={"rect-" + field.id}
+                        bounds={[
+                          [field.lat - 0.002, field.lng - 0.002],
+                          [field.lat + 0.002, field.lng + 0.002]
+                        ]}
+                        pathOptions={{
+                          color: "#2563eb",
+                          fillOpacity: 0.1
+                        }}
+                      />
                     ))}
                   </MapContainer>
 
+                  {/* 🌱 SOIL INSIGHT */}
+                  {selectedSoil && (
+                    <div style={{
+                      position: "absolute",
+                      top: "80px",
+                      right: "20px",
+                      background: "#fff",
+                      padding: "12px 16px",
+                      borderRadius: "10px",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                      zIndex: 1000,
+                      minWidth: "200px"
+                    }}>
+                      <h4 style={{ margin: "0 0 5px" }}>🌱 Soil Insight</h4>
+                      <p style={{ margin: "0" }}>
+                        {selectedSoil.type}: <strong>{selectedSoil.value}</strong>
+                      </p>
+                      <p style={{ fontSize: "13px", marginTop: "5px" }}>
+                        👉 {selectedSoil.value < 150
+                          ? "Low nutrient - Add fertilizer"
+                          : "Soil condition is good"}
+                      </p>
+                    </div>
+                  )}
+
                   {/* LEGEND */}
                   <div className="map-legend-overlay">
-                      <h4>{nutrient} Levels</h4>
-                      {nutrient === 'pH' ? (
-                          <>
-                           <div className="legend-item"><span style={{background:'#60a5fa'}}></span> Acidic</div>
-                           <div className="legend-item"><span style={{background:'#22c55e'}}></span> Neutral</div>
-                           <div className="legend-item"><span style={{background:'#f97316'}}></span> Alkaline</div>
-                          </>
-                      ) : (
-                          <>
-                           <div className="legend-item"><span style={{background:'#ef4444'}}></span> Low</div>
-                           <div className="legend-item"><span style={{background:'#facc15'}}></span> Medium</div>
-                           <div className="legend-item"><span style={{background:'#22c55e'}}></span> High</div>
-                          </>
-                      )}
+                    <h4>{nutrient} Levels</h4>
+                    {nutrient === "pH" ? (
+                      <>
+                        <div className="legend-item"><span style={{ background: "#60a5fa" }}></span> Acidic</div>
+                        <div className="legend-item"><span style={{ background: "#22c55e" }}></span> Neutral</div>
+                        <div className="legend-item"><span style={{ background: "#f97316" }}></span> Alkaline</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="legend-item"><span style={{ background: "#ef4444" }}></span> Low</div>
+                        <div className="legend-item"><span style={{ background: "#facc15" }}></span> Medium</div>
+                        <div className="legend-item"><span style={{ background: "#22c55e" }}></span> High</div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* SIDEBAR */}
               <div className="fields-sidebar">
-                <div className="field-list-header"><span>📂</span><h3>Your Fields</h3></div>
+                <div className="field-list-header">
+                  <span>📂</span>
+                  <h3>Your Fields</h3>
+                </div>
+
                 <div className="field-cards-container">
-                  {fields.map(field => (
-                    <div key={field.id} className="field-item">
+                  {fields.map((field) => (
+                    <div
+                      key={field.id}
+                      className="field-item"
+                      onClick={() => {
+                        setInputLat(field.lat);
+                        setInputLng(field.lng);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <div className={`field-status ${field.color}`}></div>
-                      <div className="field-info"><strong>{field.name}</strong><p>{field.crop} • {field.area} ha</p></div>
+                      <div className="field-info">
+                        <strong>{field.name}</strong>
+                        <p>{field.crop} • {field.area} ha</p>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* ADD FIELD POPUP */}
+            {/* ADD FIELD MODAL (UNCHANGED) */}
             {showModal && (
               <div className="modal-overlay">
                 <div className="modal-content">
-                  <div className="modal-header"><h3>Add New Field</h3><button className="close-btn" onClick={() => setShowModal(false)}><X size={20}/></button></div>
+                  <div className="modal-header">
+                    <h3>Add New Field</h3>
+                    <button className="close-btn" onClick={() => setShowModal(false)}>
+                      <X size={20} />
+                    </button>
+                  </div>
+
                   <div className="modal-body">
-                    <label>Field Name</label><input type="text" value={newField.name} onChange={(e) => setNewField({...newField, name: e.target.value})} />
+                    <label>Field Name</label>
+                    <input type="text" value={newField.name} onChange={(e) => setNewField({ ...newField, name: e.target.value })} />
+
                     <div className="form-row">
-                      <div><label>Crop</label><input type="text" value={newField.crop} onChange={(e) => setNewField({...newField, crop: e.target.value})} /></div>
-                      <div><label>Area</label><input type="text" value={newField.area} onChange={(e) => setNewField({...newField, area: e.target.value})} /></div>
+                      <div>
+                        <label>Crop</label>
+                        <input type="text" value={newField.crop} onChange={(e) => setNewField({ ...newField, crop: e.target.value })} />
+                      </div>
+                      <div>
+                        <label>Area</label>
+                        <input type="text" value={newField.area} onChange={(e) => setNewField({ ...newField, area: e.target.value })} />
+                      </div>
                     </div>
+
                     <div className="form-row">
-                      <div><label>Lat</label><input type="text" value={newField.lat} onChange={(e) => setNewField({...newField, lat: e.target.value})} /></div>
-                      <div><label>Lng</label><input type="text" value={newField.lng} onChange={(e) => setNewField({...newField, lng: e.target.value})} /></div>
+                      <div>
+                        <label>Lat</label>
+                        <input type="text" value={newField.lat} onChange={(e) => setNewField({ ...newField, lat: e.target.value })} />
+                      </div>
+                      <div>
+                        <label>Lng</label>
+                        <input type="text" value={newField.lng} onChange={(e) => setNewField({ ...newField, lng: e.target.value })} />
+                      </div>
                     </div>
                   </div>
-                  <div className="modal-footer"><button className="save-btn" onClick={handleAddField}>Save Field</button></div>
+
+                  <div className="modal-footer">
+                    <button className="save-btn" onClick={handleAddField}>
+                      Save Field
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
