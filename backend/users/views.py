@@ -1,10 +1,31 @@
 from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import SignupSerializer
 from rest_framework.authtoken.models import Token
 from .serializers import LoginSerializer
+from django.contrib.auth import logout
+from rest_framework.decorators import api_view
+
+@api_view(['POST'])
+def logout_user(request):
+    logout(request)  # 🔥 session destroy
+    return Response({"message": "Logged out successfully"})
+
+from .serializers import SignupSerializer
+from rest_framework.authtoken.models import Token
+from .serializers import LoginSerializer
+from django.contrib.auth import logout
+from rest_framework.decorators import api_view
+
+
+@api_view(['POST'])
+def logout_user(request):
+    logout(request)  # 🔥 session destroy
+    return Response({"message": "Logged out successfully"})
 
 from django.core.cache import cache   # 👈 add this
 
@@ -49,23 +70,3 @@ class LoginView(APIView):
             "email": user.email,
             "full_name": user.full_name
         }, status=status.HTTP_200_OK)
-from django.contrib.auth import logout
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
-def logout_view(request):
-    if request.method == "POST":
-        logout(request)
-        return JsonResponse({"message": "Logged out successfully"})
-    return JsonResponse({"error": "Invalid request"}, status=400)
-from django.http import JsonResponse
-from .models import User, Research, Request, Dataset # Apne models ke naam check kar lena
-
-def admin_dashboard_stats(request):
-    data = {
-        "total_users": User.objects.count(),
-        "active_researchers": Research.objects.filter(status='ongoing').count(),
-       
-    }
-    return JsonResponse(data)

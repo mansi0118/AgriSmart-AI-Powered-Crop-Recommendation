@@ -10,7 +10,30 @@ const ResearcherDashboard = () => {
 
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const handleLogout = async () => {
+  const confirmLogout = window.confirm("Are you sure you want to Logout?");
+  if (!confirmLogout) return;
 
+  try {
+    const res = await fetch("http://127.0.0.1:8000/api/users/logout/", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+    if (res.ok) {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = "/login";
+    } else {
+      console.error("Logout failed");
+    }
+  } catch (err) {
+    console.error("Error:", err);
+  }
+};
   const handleShare = (e) => {
     e.preventDefault();
     if (!name || !url) return alert("Please fill all fields!");
@@ -33,7 +56,12 @@ const ResearcherDashboard = () => {
         <nav className="header-nav">
           <a className="active">Dashboard</a>
           <a>Map</a>
-          <a>Logout</a>
+          <a 
+  onClick={handleLogout} 
+  style={{ cursor: "pointer", color: "red", marginLeft: "10px" }}
+>
+  Logout
+</a>
         </nav>
       </header>
 
@@ -129,5 +157,4 @@ const ResearcherDashboard = () => {
     </div>
   );
 };
-
 export default ResearcherDashboard;

@@ -1,23 +1,16 @@
-<<<<<<< HEAD
 from django.contrib.auth import logout
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
-def logout_view(request):
-    if request.method == "POST":
-        logout(request)
-        return JsonResponse({"message": "Logged out successfully"})
-    return JsonResponse({"error": "Invalid request"}, status=400)
-=======
 import random
 from django.core.mail import send_mail
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import OTP
 from django.core.cache import cache
-
-
+def logout_user(request):
+    if request.method == "POST":
+        logout(request)
+        return Response({"message": "Logged out successfully"})
+    return Response({"error": "Invalid request"}, status=400)
 @api_view(['POST'])
 def send_otp(request):
     email = request.data.get('email')
@@ -57,4 +50,3 @@ def verify_otp(request):
             return Response({"error": "OTP expired"})
     
     return Response({"error": "Invalid OTP"})
->>>>>>> 585f13c91d9247fe66ac299e09f51596f2d244d3
