@@ -85,6 +85,16 @@ def add_data(request):
 
     return Response({"msg": "Dataset added successfully"})
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    user = request.user
+
+    return Response({
+        "full_name": user.full_name,
+        "email": user.email,
+        "role": user.role
+    })
 
 # =========================
 # ⚙️ UPDATE USER SETTINGS

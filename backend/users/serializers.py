@@ -23,7 +23,7 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, data):
         user = authenticate(
-            email=data['email'],
+            username=data['email'],   # ✅ FIX HERE
             password=data['password']
         )
 
