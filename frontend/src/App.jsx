@@ -35,8 +35,6 @@ function App() {
           <Route path="weather" element={<Weather />} />
         </Route>
 
-        {/* --- 2. RESEARCHER DASHBOARD (FIXED PATH) --- */}
-        {/* Ab tera URL: localhost:3001/researcher/dashboard kaam karega */}
         <Route path="/researcher/dashboard/*" element={<ResearcherDashboard />} />
 
         {/* --- 3. USER DASHBOARD --- */}

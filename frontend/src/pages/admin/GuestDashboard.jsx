@@ -111,7 +111,6 @@ export default function GuestDashboard() {
         <div className="profile-section">
           <div className="profile-avatar">G</div>
           <div className="profile-details"><h4>Guest User</h4><p>Public Access</p></div>
-          <div className="status-badge">● Exploring</div>
         </div>
         <nav className="nav-menu">
           <div className="nav-item active">

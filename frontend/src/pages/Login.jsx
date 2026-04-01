@@ -28,14 +28,20 @@ const Login = () => {
     console.log("LOGIN RESPONSE:", data);
 
     if (!res.ok) {
-      alert(data.non_field_errors?.[0] || "Login failed");
+      alert(JSON.stringify(data));
       return;
     }
+    const role = data.role?.toLowerCase();
 
-    const role = data.role.toLowerCase();
+if (!role) {
+  alert("Role not found in response");
+  console.log("FULL RESPONSE:", data);
+  return;
+}
 
     localStorage.setItem("token", data.token);
     localStorage.setItem("role", role);
+    localStorage.setItem("user_id", data.user_id);
     localStorage.setItem("email", data.email);
 
     if (role === "admin") navigate("/admin/dashboard");
