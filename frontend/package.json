@@ -1,5 +1,4 @@
 {
-  
   "name": "frontend",
   "version": "1.0.0",
   "description": "",
@@ -17,15 +16,9 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
     "plotly.js": "^3.4.0",
-<<<<<<< HEAD
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
-=======
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-leaflet": "^5.0.0",
->>>>>>> efee2f30ac84b481e8b33ee2f3e58f427fdb9e67
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^6.30.3",
     "react-scripts": "^5.0.1",
@@ -43,6 +36,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-    
   }
 }
