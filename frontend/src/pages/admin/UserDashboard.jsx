@@ -27,8 +27,7 @@ export default function UserDashboard() {
   const [inputLng, setInputLng] = useState("78.65");
   const [researchData, setResearchData] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false); // Loading state
-
-const [user, setUser] = useState({ name: "", email: "", role: "" });
+  const [user, setUser] = useState({ name: "", email: "", role: "" });
 
   useEffect(() => {
   fetch("http://127.0.0.1:8000/api/researcher/1/")
@@ -133,7 +132,9 @@ const handleSaveSettings = async () => {
   const [activePage, setActivePage] = useState("dashboard");
   const [place, setPlace] = useState("");
   const [selectedSoil, setSelectedSoil] = useState(null);
-  
+  const [showSoilModal, setShowSoilModal] = useState(false);
+  const [soilPrediction, setSoilPrediction] = useState([]);
+  const [loadingPrediction, setLoadingPrediction] = useState(false);
   function MapClickHandler() {
   useMapEvents({
     click(e) {
@@ -805,13 +806,53 @@ const getInitials = (name) => {
                             weight: 0
                           }}
                           eventHandlers={{
-                            click: () => {
-                              setSelectedSoil({
+                            click: async () => {
+                              const clickedData = {
                                 lat: cell.Latitude,
                                 lng: cell.Longitude,
-                                value: val,
-                                type: nutrient
-                              });
+                                N: cell.n,
+                                P: cell.p,
+                                K: cell.k,
+                                ph: cell.pH
+                              };
+
+                              setSelectedSoil(clickedData);
+                              setShowSoilModal(true);
+
+                              try {
+                                setLoadingPrediction(true);
+
+                                // ✅ 1. WEATHER FETCH
+                                const weatherRes = await fetch(
+                                  `http://127.0.0.1:5000/weather?lat=${clickedData.lat}&lon=${clickedData.lng}`
+                                );
+                                const weather = await weatherRes.json();
+
+                                // ✅ 2. MODEL CALL
+                                const res = await fetch("http://127.0.0.1:5000/predict", {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json"
+                                  },
+                                  body: JSON.stringify({
+                                    Nitrogen: clickedData.N,
+                                    Phosphorus: clickedData.P,
+                                    Potassium: clickedData.K,
+                                    Ph: clickedData.ph,
+                                    temperature: weather.temperature,
+                                    humidity: weather.humidity,
+                                    rainfall: weather.rainfall
+                                  })
+                                });
+
+                                const data = await res.json();
+
+                                setSoilPrediction(data.recommendations || []);
+                              } catch (err) {
+                                console.error("Prediction error:", err);
+                              } finally {
+                                setLoadingPrediction(false);
+                              }
                             }
                           }}
                         >
@@ -850,29 +891,58 @@ const getInitials = (name) => {
                   </MapContainer>
 
                   {/* 🌱 SOIL INSIGHT */}
-                  {selectedSoil && (
-                    <div style={{
-                      position: "absolute",
-                      top: "80px",
-                      right: "20px",
-                      background: "#fff",
-                      padding: "12px 16px",
-                      borderRadius: "10px",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                      zIndex: 1000,
-                      minWidth: "200px"
-                    }}>
-                      <h4 style={{ margin: "0 0 5px" }}>🌱 Soil Insight</h4>
-                      <p style={{ margin: "0" }}>
-                        {selectedSoil.type}: <strong>{selectedSoil.value}</strong>
-                      </p>
-                      <p style={{ fontSize: "13px", marginTop: "5px" }}>
-                        👉 {selectedSoil.value < 150
-                          ? "Low nutrient - Add fertilizer"
-                          : "Soil condition is good"}
-                      </p>
-                    </div>
-                  )}
+                  {showSoilModal && selectedSoil && (
+                     <div className="soil-modal-overlay">
+                          <div className="soil-modal">
+
+                            <h2 className="modal-title">🌱 Soil Insights</h2>
+
+                            <div className="soil-grid">
+                              <div className="soil-card n">
+                                <span>N</span>
+                                <strong>{selectedSoil.N}</strong>
+                              </div>
+                              <div className="soil-card p">
+                                <span>P</span>
+                                <strong>{selectedSoil.P}</strong>
+                              </div>
+                              <div className="soil-card k">
+                                <span>K</span>
+                                <strong>{selectedSoil.K}</strong>
+                              </div>
+                              <div className="soil-card ph">
+                                <span>pH</span>
+                                <strong>{selectedSoil.ph}</strong>
+                              </div>
+                            </div>
+
+                            <div className="prediction-box">
+                              <h3>🌾 Top Crop Recommendations</h3>
+
+                              {loadingPrediction ? (
+                                <div className="loader"></div>
+                              ) : (
+                                <div className="crop-list-modal">
+                                  {soilPrediction.slice(0, 3).map((crop, idx) => (
+                                    <div key={idx} className="crop-item">
+                                      🌱 {crop.crop}
+                                      <span>{crop.confidence.toFixed(1)}%</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <button className="close-btn-modal" onClick={() => {
+                              setShowSoilModal(false);
+                              setSoilPrediction([]);
+                            }}>
+                              Close
+                            </button>
+
+                          </div>
+                        </div> 
+                    )}
 
                   {/* LEGEND */}
                   <div className="map-legend-overlay">
