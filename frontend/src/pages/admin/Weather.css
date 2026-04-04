@@ -5,28 +5,58 @@
   overflow-y: auto;   /* ✅ scroll fix */
 }
 
-/* 🌞 Day */
-.weather-page.day {
+/* ☀️ Clear (Day) */
+.weather-page.clear {
   background: linear-gradient(135deg, #56ccf2, #2f80ed);
-  color: #fff;
+  color: white;
 }
 
-/* 🌙 Night */
-.weather-page.night {
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  color: #e0e0e0;
+/* 🌤 Partly Cloudy */
+.weather-page.partly-cloudy {
+  background: linear-gradient(135deg, #89f7fe, #66a6ff);
+  color: #222;
+}
+
+/* ☁️ Cloudy */
+.weather-page.cloudy {
+  background: linear-gradient(135deg, #bdc3c7, #2c3e50);
+  color: #222;
+}
+
+/* ☁️ Heavy Clouds */
+.weather-page.heavy-clouds {
+  background: linear-gradient(135deg, #757f9a, #d7dde8);
+  color: #111;
 }
 
 /* 🌧 Rain */
 .weather-page.rain {
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
-  color: #f1f1f1;
+  background: linear-gradient(135deg, #4b79a1, #283e51);
+  color: white;
 }
 
-/* ☁ Cloudy */
-.weather-page.cloudy {
-  background: linear-gradient(135deg, #bdc3c7, #2c3e50);
-  color: #222;
+/* 🌧🌧 Heavy Rain */
+.weather-page.heavy-rain {
+  background: linear-gradient(135deg, #232526, #414345);
+  color: white;
+}
+
+/* ⛈ Thunderstorm */
+.weather-page.thunder {
+  background: linear-gradient(135deg, #0f2027, #000000);
+  color: white;
+}
+
+/* 🌙 Night Clear */
+.weather-page.night-clear {
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: white;
+}
+
+/* 🌙 Night Cloudy */
+.weather-page.night-cloudy {
+  background: linear-gradient(135deg, #232526, #414345);
+  color: white;
 }
 
 /* 🧊 Glass Card */

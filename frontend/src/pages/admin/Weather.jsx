@@ -37,6 +37,7 @@ const Weather = () => {
   }
 
   const current = weather.list[0];
+  const desc = current.weather[0].description;
   const { temp, humidity, pressure } = current.main;
   const wind = current.wind.speed;
   const visibility = current.visibility / 1000;
@@ -49,29 +50,43 @@ const Weather = () => {
   );
 
   // 🌦 Emoji
-  const getEmoji = (cond) => {
-    if (cond === "Rain") return "🌧️";
-    if (cond === "Clouds") return "☁️";
-    if (cond === "Clear") return "☀️";
-    if (cond === "Thunderstorm") return "⛈️";
-    if (cond === "Snow") return "❄️";
+  const getEmoji = (desc) => {
+  const d = desc.toLowerCase();
+
+    if (d.includes("thunderstorm")) return "⛈️";
+    if (d.includes("heavy intensity rain")) return "🌧️🌧️";
+    if (d.includes("rain")) return "🌧️";
+
+    if (d.includes("overcast")) return "☁️";
+    if (d.includes("broken clouds")) return "☁️";
+    if (d.includes("few clouds") || d.includes("scattered"))
+      return "🌤️";
+
+    if (d.includes("clear")) return "☀️";
+
     return "🌤️";
   };
+    const getWeatherType = () => {
+    const desc = current.weather[0].description.toLowerCase();
 
-  // 🎨 Theme
-  const getTheme = () => {
-    const hour = new Date().getHours();
+    if (desc.includes("thunderstorm")) return "thunder";
+    if (desc.includes("heavy intensity rain")) return "heavy-rain";
+    if (desc.includes("rain")) return "rain";
 
-    if (condition === "Rain") return "rain";
-    if (condition === "Clouds") return "cloudy";
-    if (hour >= 18 || hour < 6) return "night";
-    return "day";
+    if (desc.includes("overcast")) return "heavy-clouds";
+    if (desc.includes("broken clouds")) return "cloudy";
+    if (desc.includes("scattered clouds") || desc.includes("few clouds"))
+      return "partly-cloudy";
+
+    if (desc.includes("clear")) return "clear";
+
+    return "clear"; // fallback
   };
-
-  const theme = getTheme(); // ✅ optimize
+  
+  const weatherType = getWeatherType();
 
   return (
-    <div className={`weather-page ${theme}`}>
+    <div className={`weather-page ${weatherType}`}>
 
       <div className="weather-container">
 
@@ -94,9 +109,9 @@ const Weather = () => {
         {/* 🌤 Current */}
         <div className="current">
           <h1>
-            {getEmoji(condition)} {Math.round(temp)}°C
+            {getEmoji(desc)} {Math.round(temp)}°C
           </h1>
-          <p>{condition}</p>
+          <p>{desc}</p>
         </div>
 
         {/* 📊 Stats */}
