@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Users, Settings,
   FileText, CheckCircle2, Loader2
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // ─── MOCK API (replace with real fetch calls) ───────────────────────────────
 const fetchStats = () =>
@@ -25,6 +26,7 @@ const fetchVerifiedUsers = async () => {
   if (!res.ok) throw new Error("Failed to fetch users");
   return res.json();
 };
+
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -53,6 +55,10 @@ body { font-family: 'Sora', sans-serif; }
 .avatar { width:34px; height:34px; border-radius:50%; background:var(--leaf); color:var(--forest); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0; }
 .user-chip .info h4 { font-size:13px; color:#fff; font-weight:600; }
 .user-chip .info p { font-size:11px; color:#86efac; margin-top:1px; font-family:'DM Mono',monospace; }
+
+.logout-btn { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; cursor:pointer; color:#fca5a5; font-size:14px; font-weight:600; font-family:'Sora',sans-serif; background:rgba(220,38,38,.15); border:1px solid rgba(220,38,38,.25); transition:all .2s; width:100%; text-align:left; }
+.logout-btn:hover { background:rgba(220,38,38,.3); color:#fff; }
+
 .main { flex:1; padding:36px 40px; overflow-y:auto; max-width:1200px; }
 .page-header { margin-bottom:36px; }
 .page-header h1 { font-size:26px; font-weight:800; color:var(--text); letter-spacing:-.6px; }
@@ -105,22 +111,39 @@ export default function AdminDashboard() {
   const [researchers, setResearchers] = useState(null);
   const [verified, setVerified] = useState(null);
   const fetched = useRef(false);
+  const navigate = useNavigate();
+const [isAuthChecked, setIsAuthChecked] = useState(false);
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  navigate("/login");
+};
 
-  useEffect(() => {
-    if (fetched.current) return;
-    fetched.current = true;
 
-    fetch("http://localhost:8000/api/users/")
-      .then(r => r.json())
-      .then(data => setVerified(data))
-      .catch(() => setVerified([]));
+useEffect(() => {
+  const token = localStorage.getItem("token");
 
-    fetch("http://localhost:8000/api/users/researchers/")
-      .then(r => r.json())
-      .then(data => setResearchers(data))
-      .catch(() => setResearchers([]));
-  }, []);
+  if (!token) {
+    navigate("/login");
+    return;
+  }
 
+  setIsAuthChecked(true);
+
+  if (fetched.current) return;
+  fetched.current = true;
+
+  fetch("http://localhost:8000/api/users/")
+    .then(r => r.json())
+    .then(data => setVerified(data))
+    .catch(() => setVerified([]));
+
+  fetch("http://localhost:8000/api/users/researchers/")
+    .then(r => r.json())
+    .then(data => setResearchers(data))
+    .catch(() => setResearchers([]));
+
+}, []);
+  if (!isAuthChecked) return null;
   return (
     <>
       <style>{css}</style>
@@ -139,6 +162,9 @@ export default function AdminDashboard() {
             <div className={`nav-item ${tab === "settings" ? "active" : ""}`} onClick={() => setTab("settings")}>
               <Settings size={18} /> <span>Settings</span>
             </div>
+           <button className="logout-btn" onClick={handleLogout}>
+  Logout
+</button>
             <div className="user-chip">
               <div className="avatar">AS</div>
               <div className="info"><h4>Admin User</h4><p>tayalveer20@gmail.com</p></div>
