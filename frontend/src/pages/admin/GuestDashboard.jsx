@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   MapContainer, TileLayer, Marker, Popup, useMapEvents,
@@ -86,7 +86,19 @@ export default function GuestDashboard() {
   const [location, setLocation] = useState(null);
   const [inputLat, setInputLat] = useState("27.80");
   const [inputLng, setInputLng] = useState("78.65");
+  const [city, setCity] = useState("Gurgaon");
+  const [weather, setWeather] = useState(null);
+  const API_KEY = process.env.REACT_APP_WEATHER_API_KEY;
 
+  useEffect(() => {
+    if (!API_KEY) return;
+
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`)
+      .then(res => res.json())
+      .then(data => setWeather(data))
+      .catch(err => console.error(err));
+
+  }, [city]);
   // ✅ Two separate overlay states
   const [sidebarFeature, setSidebarFeature] = useState(null); // sidebar item click
   const [showGenPopup, setShowGenPopup]     = useState(false); // generate button click
@@ -111,7 +123,6 @@ export default function GuestDashboard() {
         <div className="profile-section">
           <div className="profile-avatar">G</div>
           <div className="profile-details"><h4>Guest User</h4><p>Public Access</p></div>
-          <div className="status-badge">● Exploring</div>
         </div>
         <nav className="nav-menu">
           <div className="nav-item active">
@@ -144,44 +155,148 @@ export default function GuestDashboard() {
 
             <div className="stat-card" style={{ position: "relative", overflow: "hidden" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+  
+                {/* LEFT - WEATHER */}
                 <div>
-                  <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Today's Weather</p>
-                  <h2 style={{ fontSize: "32px", fontWeight: "700", color: "#111827", margin: "0 0 2px" }}>28°C</h2>
-                  <p style={{ fontSize: "14px", color: "#4B5563", margin: "0 0 10px" }}>Partly Cloudy</p>
+                  <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                    Today's Weather
+                  </p>
+
+                  <h2 style={{ fontSize: "32px", fontWeight: "700", color: "#111827", margin: "0 0 2px" }}>
+                    {weather?.main ? `${weather.main.temp}°C` : "--"}
+                  </h2>
+
+                  <p style={{ fontSize: "14px", color: "#4B5563", margin: "0 0 10px" }}>
+                    {weather?.weather ? weather.weather[0].description : "Loading..."}
+                  </p>
+
+                  <div style={{ fontSize: "12px", color: "#888" }}>
+                    📍 {city}
+                  </div>
                 </div>
-                <div style={{ fontSize: "40px", lineHeight: 1 }}>☀️</div>
+
+                {/* RIGHT - CITY INPUT */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "flex-end" }}>
+                  
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="City"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: "8px",
+                      border: "1px solid #eee",
+                      fontSize: "12px",
+                      width: "100px"
+                    }}
+                  />
+
+                  <button
+                    onClick={() => setCity(city)}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#7da07d",
+                      color: "white",
+                      fontSize: "12px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Update
+                  </button>
+
+                </div>
+
               </div>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#FEF3C7", padding: "5px 12px", borderRadius: "20px", fontSize: "12px", color: "#92400E", fontWeight: "500" }}>
-                🌧 Rain expected Wed–Thu
-              </div>
+              
             </div>
 
             <div className="stat-card" style={{ position: "relative", overflow: "hidden" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Data Access</p>
-                  <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#111827", margin: "0 0 2px" }}>Public Data</h2>
-                  <p style={{ fontSize: "13px", color: "#4B5563", margin: "0 0 10px" }}>Map-based analysis</p>
-                </div>
-                <div style={{ fontSize: "36px", lineHeight: 1 }}>🌱</div>
-              </div>
-              <div onClick={() => navigate("/login")} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#ECFDF5", padding: "5px 12px", borderRadius: "20px", fontSize: "12px", color: "#065F46", fontWeight: "500", cursor: "pointer" }}>
-                🔒 Login for your fields
-              </div>
-            </div>
 
-            <div className="stat-card" style={{ position: "relative", overflow: "hidden" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                
                 <div>
-                  <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Regional Soil</p>
-                  <h2 style={{ fontSize: "28px", fontWeight: "700", color: "#111827", margin: "0 0 2px" }}>Good</h2>
-                  <p style={{ fontSize: "13px", color: "#4B5563", margin: "0 0 10px" }}>Regional soil status</p>
+                  <p style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: "600", textTransform: "uppercase", marginBottom: "6px" }}>
+                    Location Tools
+                  </p>
+
+                  <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#111827", margin: "0 0 6px" }}>
+                    City & GPS Access
+                  </h2>
+
+                  <p style={{ fontSize: "13px", color: "#4B5563", marginBottom: "10px" }}>
+                    Fetch coordinates using city or your current location
+                  </p>
+
+                  {/* FAKE INPUT (LOCKED) */}
+                  <input
+                    type="text"
+                    placeholder="Enter city"
+                    disabled
+                    style={{
+                      padding: "8px",
+                      borderRadius: "8px",
+                      border: "1px solid #eee",
+                      width: "100%",
+                      marginBottom: "8px",
+                      background: "#f9f9f9"
+                    }}
+                  />
+
+                  {/* BUTTONS (LOCKED) */}
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button disabled style={{
+                      flex: 1,
+                      padding: "8px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#ddd",
+                      cursor: "not-allowed",
+                      fontSize: "12px"
+                    }}>
+                      Get Coordinates
+                    </button>
+
+                    <button disabled style={{
+                      flex: 1,
+                      padding: "8px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#ddd",
+                      cursor: "not-allowed",
+                      fontSize: "12px"
+                    }}>
+                      Use My Location
+                    </button>
+                  </div>
                 </div>
-                <div style={{ fontSize: "36px", lineHeight: 1 }}>📈</div>
+
+                <div style={{ fontSize: "32px" }}>📍</div>
+
               </div>
-              <div onClick={() => navigate("/login")} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#EFF6FF", padding: "5px 12px", borderRadius: "20px", fontSize: "12px", color: "#1E40AF", fontWeight: "500", cursor: "pointer" }}>
-                🔒 Login for detailed insights
+
+              {/* 🔒 LOGIN CTA */}
+              <div
+                onClick={() => navigate("/login")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#FEF3C7",
+                  padding: "6px 12px",
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  color: "#92400E",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  marginTop: "12px"
+                }}
+              >
+                🔒 Login to enable location features
               </div>
+
             </div>
 
           </div>

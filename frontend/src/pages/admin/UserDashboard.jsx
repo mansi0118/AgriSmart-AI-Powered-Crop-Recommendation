@@ -27,11 +27,10 @@ export default function UserDashboard() {
   const [inputLng, setInputLng] = useState("78.65");
   const [researchData, setResearchData] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false); // Loading state
-
-const [user, setUser] = useState({ name: "", email: "", role: "" });
+  const [user, setUser] = useState({ name: "", email: "", role: "" });
 
   useEffect(() => {
-  fetch("http://127.0.0.1:8000/api/researcher/1/")
+  fetch("http://127.0.0.1:8000/api/researchers/")
     .then(res => res.json())
     .then(data => setResearchData(data))
     .catch(err => console.error("Research fetch error:", err));
@@ -133,7 +132,9 @@ const handleSaveSettings = async () => {
   const [activePage, setActivePage] = useState("dashboard");
   const [place, setPlace] = useState("");
   const [selectedSoil, setSelectedSoil] = useState(null);
-  
+  const [showSoilModal, setShowSoilModal] = useState(false);
+  const [soilPrediction, setSoilPrediction] = useState([]);
+  const [loadingPrediction, setLoadingPrediction] = useState(false);
   function MapClickHandler() {
   useMapEvents({
     click(e) {
@@ -344,8 +345,6 @@ const getInitials = (name) => {
     <h4>{user.name || "User"}</h4>
     <p>{user.region || "No region set"}</p>
   </div>
-
-  <div className="status-badge">● Active field</div>
 
 </div>
 
@@ -575,106 +574,84 @@ const getInitials = (name) => {
   </div>
 )}
 {/* 2. RESEARCHER DATA PAGE (NEW COMPONENT) */}
-        {activePage === "researcherData" && (
-          <div className="content-fade-in" key="researcherData">
-            <header className="page-header">
-              <h1>Researcher Datasets</h1>
-              <p className="subtitle-small">Access agricultural data contributed by research labs</p>
-            </header>
+      {/* 2. RESEARCHER DATA PAGE (VIEW ONLY) */}
+{activePage === "researcherData" && (
+  <div className="content-fade-in" key="researcherData">
+    <header className="page-header">
+      <h1>Researcher Datasets</h1>
+      <p className="subtitle-small">View all available agricultural datasets shared by researchers</p>
+    </header>
 
-            <div className="settings-container-layout">
-              {/* Dataset List Card */}
-              <div className="settings-card" style={{padding: "0", overflow: "hidden"}}>
-                <div className="card-title-row" style={{padding: "25px 30px", borderBottom: "1px solid #f0f0f0"}}>
-                  <div className="icon-box-light"><span className="pref-icon">📊</span></div>
-                  <div><h3>Available Datasets</h3><p>Verified uploads from IARI & Local Labs</p></div>
-                </div>
-
-                <div className="dataset-table-container" style={{padding: "0 30px 30px"}}>
-                  <table style={{width: "100%", borderCollapse: "collapse", textAlign: "left"}}>
-                    <thead>
-                      <tr style={{borderBottom: "2px solid #f5f5f5", color: "#888", fontSize: "13px", textTransform: "uppercase"}}>
-                        <th style={{padding: "15px 0"}}>Date</th>
-                        <th style={{padding: "15px 0"}}>Researcher / Lab</th>
-                        <th style={{padding: "15px 0"}}>Dataset Title</th>
-                        <th style={{padding: "15px 0"}}>Status</th>
-                        <th style={{padding: "15px 0", textAlign: "right"}}>Action</th>
-                      </tr>
-                    </thead>
-                   <tbody>
-  {researchData.length === 0 ? (
-    <tr>
-      <td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>
-        No datasets available 🚀
-      </td>
-    </tr>
-  ) : (
-    researchData.map((item) => (
-      <tr
-        key={item.id}
-        style={{
-          borderBottom: "1px solid #f9f9f9",
-          fontSize: "14px",
-          color: "#333"
-        }}
-      >
-        <td style={{ padding: "15px 0", color: "#666" }}>
-          {item.date}
-        </td>
-
-        <td style={{ padding: "15px 0", fontWeight: "600" }}>
-          User {item.user_id}
-        </td>
-
-        <td style={{ padding: "15px 0" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <FileText size={16} color="#7da07d" />
-            {item.name}
+    <div className="settings-container-layout">
+      {/* ✅ ONLY THE TABLE REMAINS */}
+      <div className="settings-card" style={{ padding: "0", overflow: "hidden", minHeight: "400px" }}>
+        <div className="card-title-row" style={{ padding: "25px 30px", borderBottom: "1px solid #f0f0f0" }}>
+          <div className="icon-box-light"><span className="pref-icon">📊</span></div>
+          <div>
+            <h3>Available Datasets</h3>
+            <p>Access public research data and regional soil reports</p>
           </div>
-        </td>
+        </div>
 
-        <td style={{ padding: "15px 0" }}>
-          <span
-            style={{
-              padding: "5px 12px",
-              borderRadius: "20px",
-              fontSize: "12px",
-              fontWeight: "600",
-              background: "#e8f5e9",
-              color: "#2e7d32"
-            }}
-          >
-            Available
-          </span>
-        </td>
-
-        <td style={{ padding: "15px 0", textAlign: "right" }}>
-          <a href={item.url} target="_blank" rel="noopener noreferrer">
-            <button
-              className="save-btn"
-              style={{
-                padding: "8px 15px",
-                fontSize: "12px",
-                display: "inline-flex",
-                gap: "5px",
-                alignItems: "center"
-              }}
-            >
-              <Download size={14} /> Download
-            </button>
-          </a>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+        <div className="dataset-table-container" style={{ padding: "0 30px 30px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid #f5f5f5", color: "#888", fontSize: "13px", textTransform: "uppercase" }}>
+                <th style={{ padding: "15px 0" }}>Date</th>
+                <th style={{ padding: "15px 0" }}>Researcher</th>
+                <th style={{ padding: "15px 0" }}>Dataset Title</th>
+                <th style={{ padding: "15px 0", textAlign: "right" }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {researchData.length === 0 ? (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: "center", padding: "40px", color: "#888" }}>
+                    <div style={{ fontSize: "24px", marginBottom: "10px" }}>📁</div>
+                    No datasets available at the moment.
+                  </td>
+                </tr>
+              ) : (
+                researchData.map((item) => (
+                  <tr key={item.id} className="table-row-hover" style={{ borderBottom: "1px solid #f9f9f9", fontSize: "14px" }}>
+                    <td style={{ padding: "15px 0", color: "#666" }}>{item.date}</td>
+                    <td style={{ padding: "15px 0", fontWeight: "600", color: "#374151" }}>
+                      {item.researcher_name || "Admin / Scholar"}
+                    </td>
+                    <td style={{ padding: "15px 0" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <FileText size={16} color="#7da07d" />
+                        <span style={{ color: "#1f2937" }}>{item.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "15px 0", textAlign: "right" }}>
+                      <a 
+                        href={item.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="download-link-btn"
+                        style={{ 
+                          display: "inline-flex", 
+                          alignItems: "center", 
+                          gap: "5px", 
+                          color: "#7da07d", 
+                          fontWeight: "600",
+                          textDecoration: "none"
+                        }}
+                      >
+                        <Download size={14} /> View Data
+                      </a>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
         {/* 2. WEATHER PAGE */}
         {activePage === "weather" && (
           <div className="content-fade-in" key="weather">
@@ -805,13 +782,53 @@ const getInitials = (name) => {
                             weight: 0
                           }}
                           eventHandlers={{
-                            click: () => {
-                              setSelectedSoil({
+                            click: async () => {
+                              const clickedData = {
                                 lat: cell.Latitude,
                                 lng: cell.Longitude,
-                                value: val,
-                                type: nutrient
-                              });
+                                N: cell.n,
+                                P: cell.p,
+                                K: cell.k,
+                                ph: cell.pH
+                              };
+
+                              setSelectedSoil(clickedData);
+                              setShowSoilModal(true);
+
+                              try {
+                                setLoadingPrediction(true);
+
+                                // ✅ 1. WEATHER FETCH
+                                const weatherRes = await fetch(
+                                  `http://127.0.0.1:5000/weather?lat=${clickedData.lat}&lon=${clickedData.lng}`
+                                );
+                                const weather = await weatherRes.json();
+
+                                // ✅ 2. MODEL CALL
+                                const res = await fetch("http://127.0.0.1:5000/predict", {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json"
+                                  },
+                                  body: JSON.stringify({
+                                    Nitrogen: clickedData.N,
+                                    Phosphorus: clickedData.P,
+                                    Potassium: clickedData.K,
+                                    Ph: clickedData.ph,
+                                    temperature: weather.temperature,
+                                    humidity: weather.humidity,
+                                    rainfall: weather.rainfall
+                                  })
+                                });
+
+                                const data = await res.json();
+
+                                setSoilPrediction(data.recommendations || []);
+                              } catch (err) {
+                                console.error("Prediction error:", err);
+                              } finally {
+                                setLoadingPrediction(false);
+                              }
                             }
                           }}
                         >
@@ -850,29 +867,58 @@ const getInitials = (name) => {
                   </MapContainer>
 
                   {/* 🌱 SOIL INSIGHT */}
-                  {selectedSoil && (
-                    <div style={{
-                      position: "absolute",
-                      top: "80px",
-                      right: "20px",
-                      background: "#fff",
-                      padding: "12px 16px",
-                      borderRadius: "10px",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                      zIndex: 1000,
-                      minWidth: "200px"
-                    }}>
-                      <h4 style={{ margin: "0 0 5px" }}>🌱 Soil Insight</h4>
-                      <p style={{ margin: "0" }}>
-                        {selectedSoil.type}: <strong>{selectedSoil.value}</strong>
-                      </p>
-                      <p style={{ fontSize: "13px", marginTop: "5px" }}>
-                        👉 {selectedSoil.value < 150
-                          ? "Low nutrient - Add fertilizer"
-                          : "Soil condition is good"}
-                      </p>
-                    </div>
-                  )}
+                  {showSoilModal && selectedSoil && (
+                     <div className="soil-modal-overlay">
+                          <div className="soil-modal">
+
+                            <h2 className="modal-title">🌱 Soil Insights</h2>
+
+                            <div className="soil-grid">
+                              <div className="soil-card n">
+                                <span>N</span>
+                                <strong>{selectedSoil.N}</strong>
+                              </div>
+                              <div className="soil-card p">
+                                <span>P</span>
+                                <strong>{selectedSoil.P}</strong>
+                              </div>
+                              <div className="soil-card k">
+                                <span>K</span>
+                                <strong>{selectedSoil.K}</strong>
+                              </div>
+                              <div className="soil-card ph">
+                                <span>pH</span>
+                                <strong>{selectedSoil.ph}</strong>
+                              </div>
+                            </div>
+
+                            <div className="prediction-box">
+                              <h3>🌾 Top Crop Recommendations</h3>
+
+                              {loadingPrediction ? (
+                                <div className="loader"></div>
+                              ) : (
+                                <div className="crop-list-modal">
+                                  {soilPrediction.slice(0, 3).map((crop, idx) => (
+                                    <div key={idx} className="crop-item">
+                                      🌱 {crop.crop}
+                                      <span>{crop.confidence.toFixed(1)}%</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <button className="close-btn-modal" onClick={() => {
+                              setShowSoilModal(false);
+                              setSoilPrediction([]);
+                            }}>
+                              Close
+                            </button>
+
+                          </div>
+                        </div> 
+                    )}
 
                   {/* LEGEND */}
                   <div className="map-legend-overlay">

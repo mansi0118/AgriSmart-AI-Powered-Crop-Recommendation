@@ -1,108 +1,151 @@
 import React, { useEffect, useState } from "react";
-import { Sun, Cloud, Wind, Eye, Gauge, CloudRain } from "lucide-react";
 import "./Weather.css";
 
 const Weather = () => {
   const [weather, setWeather] = useState(null);
+  const [city, setCity] = useState("Kasganj");
+  const [inputCity, setInputCity] = useState("");
 
-  const API_KEY = process.env.REACT_APP_WEATHER_KEY;
-  const CITY = "Kasganj";
-  const COUNTRY = "IN";
+  const API_KEY = process.env.REACT_APP_WEATHER_API_KEY;
 
   useEffect(() => {
     fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${CITY},${COUNTRY}&units=metric&appid=${API_KEY}`
+      `https://api.openweathermap.org/data/2.5/forecast?q=${city},IN&units=metric&appid=${API_KEY}`
     )
       .then((res) => res.json())
       .then((data) => setWeather(data))
-      .catch((err) => console.log("Weather Fetch Error:", err));
-  }, [API_KEY]);
+      .catch((err) => console.log(err));
+  }, [city]);
 
-  if (!weather || weather.cod !== 200) {
-    return <div className="loading">🌤️ Loading Weather...</div>;
+  const handleUseLocation = () => {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const { latitude, longitude } = pos.coords;
+
+      const res = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${API_KEY}`
+      );
+      const data = await res.json();
+      setWeather(data);
+      setCity(data.city.name);
+    });
+  };
+
+  if (!weather) return <div className="loading">Loading...</div>;
+
+  if (weather.cod !== "200") {
+    return <div className="loading">❌ {weather.message}</div>;
   }
 
-  const { temp, humidity, pressure, feels_like } = weather.main;
-  const wind = weather.wind.speed;
-  const visibility = weather.visibility / 1000;
-  const condition = weather.weather[0].main;
-  const description = weather.weather[0].description;
+  const current = weather.list[0];
+  const desc = current.weather[0].description;
+  const { temp, humidity, pressure } = current.main;
+  const wind = current.wind.speed;
+  const visibility = current.visibility / 1000;
+  const condition = current.weather[0].main;
 
-  const getAdvice = (t) => {
-    if (t < 20) return "Cool weather 🌾 - Ideal for wheat.";
-    if (t > 35) return "High temperature ☀️ - Increase irrigation.";
-    return "Normal conditions ✅ - Good for field work.";
-  };
+  const hourlyData = weather.list.slice(0, 8);
 
-  const renderIcon = () => {
-    if (condition === "Clouds") return <Cloud size={100} />;
-    if (condition === "Rain") return <CloudRain size={100} />;
-    if (condition === "Clear") return <Sun size={100} />;
-    return <Sun size={100} />;
+  const dailyData = weather.list.filter((item) =>
+    item.dt_txt.includes("12:00:00")
+  );
+
+  // 🌦 Emoji
+  const getEmoji = (desc) => {
+  const d = desc.toLowerCase();
+
+    if (d.includes("thunderstorm")) return "⛈️";
+    if (d.includes("heavy intensity rain")) return "🌧️🌧️";
+    if (d.includes("rain")) return "🌧️";
+
+    if (d.includes("overcast")) return "☁️";
+    if (d.includes("broken clouds")) return "☁️";
+    if (d.includes("few clouds") || d.includes("scattered"))
+      return "🌤️";
+
+    if (d.includes("clear")) return "☀️";
+
+    return "🌤️";
   };
+    const getWeatherType = () => {
+    const desc = current.weather[0].description.toLowerCase();
+
+    if (desc.includes("thunderstorm")) return "thunder";
+    if (desc.includes("heavy intensity rain")) return "heavy-rain";
+    if (desc.includes("rain")) return "rain";
+
+    if (desc.includes("overcast")) return "heavy-clouds";
+    if (desc.includes("broken clouds")) return "cloudy";
+    if (desc.includes("scattered clouds") || desc.includes("few clouds"))
+      return "partly-cloudy";
+
+    if (desc.includes("clear")) return "clear";
+
+    return "clear"; // fallback
+  };
+  
+  const weatherType = getWeatherType();
 
   return (
-    <div className="weather-page">
+    <div className={`weather-page ${weatherType}`}>
+
       <div className="weather-container">
 
-        <header className="header">
-          <h1>Weather Dashboard</h1>
-          <p>{CITY}, Uttar Pradesh</p>
-        </header>
+        {/* 🔍 Search */}
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Enter city..."
+            value={inputCity}
+            onChange={(e) => setInputCity(e.target.value)}
+          />
+          <button onClick={() => setCity(inputCity)}>Search</button>
+          <button onClick={handleUseLocation} className="location-btn">
+            📍 Use My Location
+          </button>
+        </div>
 
-        <div className="main-grid">
+        <h2>{city}</h2>
 
-          {/* LEFT */}
-          <div className="weather-card">
+        {/* 🌤 Current */}
+        <div className="current">
+          <h1>
+            {getEmoji(desc)} {Math.round(temp)}°C
+          </h1>
+          <p>{desc}</p>
+        </div>
 
-            <div className="top-section">
-              <div>
-                <p className="date">{new Date().toDateString()}</p>
-                <h2 className="temp">{Math.round(temp)}°C</h2>
-                <h3>{condition}</h3>
-                <p>Feels like {Math.round(feels_like)}°C</p>
-              </div>
+        {/* 📊 Stats */}
+        <div className="stats-grid">
+          <Stat icon="💧" label="Humidity" value={`${humidity}%`} />
+          <Stat icon="🌬️" label="Wind" value={`${wind} m/s`} />
+          <Stat icon="👁️" label="Visibility" value={`${visibility} km`} />
+          <Stat icon="📊" label="Pressure" value={`${pressure}`} />
+        </div>
 
-              <div className="icon">{renderIcon()}</div>
+        {/* ⏰ Hourly */}
+        <h3>Hourly Forecast</h3>
+        <div className="hourly">
+          {hourlyData.map((item, i) => (
+            <div key={i} className="hour-card">
+              <p>{new Date(item.dt_txt).getHours()}:00</p>
+              <p>{getEmoji(item.weather[0].main)}</p>
+              <p>{Math.round(item.main.temp)}°C</p>
+              <p>{item.main.humidity}%</p>
             </div>
+          ))}
+        </div>
 
-            <div className="stats-grid">
-              <Stat icon={<Cloud />} label="Humidity" value={`${humidity}%`} />
-              <Stat icon={<Wind />} label="Wind" value={`${wind} m/s`} />
-              <Stat icon={<Eye />} label="Visibility" value={`${visibility} km`} />
-              <Stat icon={<Gauge />} label="Pressure" value={`${pressure} hPa`} />
+        {/* 📅 Weekly */}
+        <h3>Next Days</h3>
+        <div className="weekly">
+          {dailyData.map((day, i) => (
+            <div key={i} className="day-card">
+              <p>{new Date(day.dt_txt).toDateString()}</p>
+              <p>{getEmoji(day.weather[0].main)}</p>
+              <p>{Math.round(day.main.temp)}°C</p>
+              <p>{day.weather[0].main}</p>
             </div>
-
-          </div>
-
-          {/* RIGHT */}
-          <div className="right-section">
-
-            <div className="card glass">
-              <h3>Live Parameters</h3>
-              <p>{description}</p>
-              <p>🌅 {new Date(weather.sys.sunrise * 1000).toLocaleTimeString()}</p>
-              <p>🌇 {new Date(weather.sys.sunset * 1000).toLocaleTimeString()}</p>
-            </div>
-
-            <div className="card glass">
-              <h3>Farming Impact</h3>
-
-              <ImpactCard
-                title="Advisory"
-                desc={getAdvice(temp)}
-                type="green"
-              />
-
-              <ImpactCard
-                title="Irrigation"
-                desc={humidity < 40 ? "Low humidity ⚠️" : "Optimal moisture ✅"}
-                type="blue"
-              />
-            </div>
-
-          </div>
-
+          ))}
         </div>
 
       </div>
@@ -112,18 +155,9 @@ const Weather = () => {
 
 const Stat = ({ icon, label, value }) => (
   <div className="stat-box">
-    {icon}
-    <div>
-      <p className="label">{label}</p>
-      <p className="value">{value}</p>
-    </div>
-  </div>
-);
-
-const ImpactCard = ({ title, desc, type }) => (
-  <div className={`impact-card ${type}`}>
-    <h4>{title}</h4>
-    <p>{desc}</p>
+    <p style={{ fontSize: "20px" }}>{icon}</p>
+    <p>{label}</p>
+    <p>{value}</p>
   </div>
 );
 

@@ -17,17 +17,28 @@ class SignupSerializer(serializers.ModelSerializer):
         )
         return user
 
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        user = authenticate(username=data['email'], password=data['password'])
+        email = data['email']
+        password = data['password']
+
+        user = User.objects.filter(email=email).first()
+
         if not user:
-            raise serializers.ValidationError("Invalid email or password")
+            raise serializers.ValidationError("User not found")
+
+        if not user.check_password(password):
+            raise serializers.ValidationError("Invalid password")
+
         if not user.is_active:
             raise serializers.ValidationError("This account is inactive")
+
         data['user'] = user
         return data
