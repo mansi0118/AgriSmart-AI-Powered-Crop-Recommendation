@@ -411,7 +411,7 @@ const getInitials = (name) => {
        {activePage === "dashboard" && (
   <div className="content-fade-in" key="dashboard">
     <header className="page-header">
-    <h1>Good Morning, {user.name} 👋</h1>
+    <h1>Welcome, {user.name} 👋</h1>
       <p>Here's what's happening with your fields today</p>
     </header>
 

@@ -146,7 +146,7 @@ export default function GuestDashboard() {
         <div className="content-fade-in">
 
           <header className="page-header">
-            <h1>Good Morning, Guest 👋</h1>
+            <h1>Welcome, Guest 👋</h1>
             <p>Here's what's happening in your region today</p>
           </header>
 
