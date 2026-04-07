@@ -557,7 +557,7 @@ export default function ResearcherDashboard() {
               <div className="settings-card" style={{ padding: "0", overflow: "hidden" }}>
                 <div className="card-title-row" style={{ padding: "25px 30px", borderBottom: "1px solid #f0f0f0" }}>
                   <div className="icon-box-light"><span className="pref-icon">📊</span></div>
-                  <div><h3>Your Shared Datasets</h3><p>Track all your previous uploads</p></div>
+                  <div><h3>Shared Datasets</h3><p>View all shared datasets</p></div>
                 </div>
                 <div style={{ padding: "0 30px 30px" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
@@ -677,7 +677,8 @@ export default function ResearcherDashboard() {
                                 const res = await fetch("http://127.0.0.1:5000/predict", {
                                   method: "POST",
                                   headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ Nitrogen: clickedData.N, Phosphorus: clickedData.P, Potassium: clickedData.K, Ph: clickedData.ph, temperature: weatherData.temperature, humidity: weatherData.humidity, rainfall: weatherData.rainfall })
+                                  body: JSON.stringify({ Nitrogen: clickedData.N, Phosphorus: clickedData.P, Potassium: clickedData.K, Ph: clickedData.ph, latitude: clickedData.lat,     // ✅ ADD THIS
+                                    longitude: clickedData.lng  })
                                 });
                                 const data = await res.json();
                                 setSoilPrediction(data.recommendations || []);

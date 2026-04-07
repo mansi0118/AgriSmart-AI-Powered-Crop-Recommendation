@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Signup.css";
 
@@ -7,14 +7,21 @@ const Signup = () => {
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "User",
   });
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [verified, setVerified] = useState(false);
-
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+  const ALLOWED_DOMAINS = ["gmail.com", "banasthali.in"];
+
+  const isAllowedEmail = (email) => {
+    const domain = email.split("@")[1]?.toLowerCase();
+    return ALLOWED_DOMAINS.includes(domain);
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,14 +30,18 @@ const Signup = () => {
 
   const validate = () => {
     let newErrors = {};
+
     if (!/^[A-Za-z ]+$/.test(form.fullName))
       newErrors.fullName = "Name should contain alphabets only";
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email))
-      newErrors.email = "Enter a valid email";
+    if (!isAllowedEmail(form.email))
+      newErrors.email = "Only gmail.com and banasthali.in emails are allowed";
 
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    if (form.password.length < 8)
+      newErrors.password = "Password must be at least 8 characters";
+
+    if (form.password !== form.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -38,43 +49,45 @@ const Signup = () => {
 
   // 🔐 SEND OTP
   const sendOtp = async () => {
-  if (!form.email) {
-    alert("Enter email first");
-    return;
-  }
+    if (!form.email) {
+      alert("Enter email first");
+      return;
+    }
 
-  try {
-    const res = await fetch(
-      "http://127.0.0.1:8000/api/accounts/send-otp/",
-      {
+    if (!isAllowedEmail(form.email)) {
+      alert("Not a valid email!");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/accounts/send-otp/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email }),
+      });
+
+      const text = await res.text();
+      console.log("RAW:", text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Server returned HTML instead of JSON");
       }
-    );
 
-    const text = await res.text();   // ✅ pehle text
-    console.log("RAW:", text);
-
-    let data;
-    try {
-      data = JSON.parse(text);       // ✅ safe parse
-    } catch {
-      throw new Error("Server returned HTML instead of JSON");
+      if (res.ok) {
+        alert(data.message || "OTP sent ✅");
+        setOtpSent(true);
+      } else {
+        alert(data.error || "Failed ❌");
+      }
+    } catch (err) {
+      console.error("OTP ERROR:", err);
+      alert("Server error ❌ (check backend)");
     }
+  };
 
-    if (res.ok) {
-      alert(data.message || "OTP sent ✅");
-      setOtpSent(true);
-    } else {
-      alert(data.error || "Failed ❌");
-    }
-
-  } catch (err) {
-    console.error("OTP ERROR:", err);
-    alert("Server error ❌ (check backend)");
-  }
-};
   // ✅ VERIFY OTP
   const verifyOtp = async () => {
     try {
@@ -113,21 +126,16 @@ const Signup = () => {
     }
 
     try {
-      const res = await fetch(
-        "http://127.0.0.1:8000/api/users/signup/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: form.email,
-            password: form.password,
-            full_name: form.fullName,
-            role: form.role.toLowerCase(),
-          }),
-        }
-      );
+      const res = await fetch("http://127.0.0.1:8000/api/users/signup/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          full_name: form.fullName,
+          role: form.role.toLowerCase(),
+        }),
+      });
 
       const data = await res.json();
 
@@ -150,89 +158,109 @@ const Signup = () => {
 
         <form onSubmit={handleSubmit} className="signup-form">
 
-  {/* FULL NAME */}
-  <div className="input-group">
-    <input
-      type="text"
-      name="fullName"
-      placeholder="Full Name"
-      value={form.fullName}
-      onChange={handleChange}
-      required
-    />
-    {errors.fullName && <p className="error-msg">{errors.fullName}</p>}
-  </div>
+          {/* FULL NAME */}
+          <div className="input-group">
+            <input
+              type="text"
+              name="fullName"
+              placeholder="Full Name"
+              value={form.fullName}
+              onChange={handleChange}
+              required
+            />
+            {errors.fullName && <p className="error-msg">{errors.fullName}</p>}
+          </div>
 
-  {/* EMAIL */}
-  <div className="input-group">
-    <input
-      type="email"
-      name="email"
-      placeholder="Email Address"
-      value={form.email}
-      onChange={handleChange}
-      required
-    />
-    {errors.email && <p className="error-msg">{errors.email}</p>}
-  </div>
+          {/* EMAIL */}
+          <div className="input-group">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+            {errors.email && <p className="error-msg">{errors.email}</p>}
+          </div>
 
-  {/* 🔐 SEND OTP BUTTON */}
-  <button type="button" className="btn-ghost" onClick={sendOtp}>
-    Send OTP
-  </button>
+          {/* SEND OTP BUTTON */}
+          <button type="button" className="btn-ghost" onClick={sendOtp}>
+            Send OTP
+          </button>
 
-  {/* OTP INPUT */}
-  {otpSent && (
-    <div className="input-group">
-      <input
-        type="text"
-        placeholder="Enter OTP"
-        value={otp}
-        onChange={(e) => setOtp(e.target.value)}
-      />
-      <button type="button" className="btn-ghost" onClick={verifyOtp}>
-        Verify OTP
-      </button>
-    </div>
-  )}
+          {/* OTP INPUT */}
+          {otpSent && (
+            <div className="input-group">
+              <input
+                type="text"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+              <button type="button" className="btn-ghost" onClick={verifyOtp}>
+                Verify OTP
+              </button>
+            </div>
+          )}
 
-  {/* PASSWORD */}
-  <div className="input-group">
-    <input
-      type="password"
-      name="password"
-      placeholder="Password"
-      value={form.password}
-      onChange={handleChange}
-      required
-    />
-    {errors.password && <p className="error-msg">{errors.password}</p>}
-  </div>
+          {/* PASSWORD */}
+          <div className="input-group">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+            {errors.password && <p className="error-msg">{errors.password}</p>}
+          </div>
 
-  {/* ROLE */}
-  <div className="role-selector">
-    <p className="section-title">Select Your Role</p>
-    <div className="role-grid">
-      {["Admin", "User", "Researcher"].map((r) => (
-        <label key={r} className={`role-item ${form.role.toLowerCase() === r.toLowerCase() ? "selected" : ""}`}>
-          <input
-            type="radio"
-            name="role"
-            value={r}
-            checked={form.role.toLowerCase() === r.toLowerCase()}
-            onChange={handleChange}
-          />
-          <span className="role-name">{r}</span>
-        </label>
-      ))}
-    </div>
-  </div>
+          {/* CONFIRM PASSWORD */}
+          <div className="input-group">
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+            {errors.confirmPassword && (
+              <p className="error-msg">{errors.confirmPassword}</p>
+            )}
+          </div>
 
-  <button type="submit" className="btn-signup-premium">
-    Create Account
-  </button>
+          {/* ROLE */}
+          <div className="role-selector">
+            <p className="section-title">Select Your Role</p>
+            <div className="role-grid">
+              {["Admin", "User", "Researcher"].map((r) => (
+                <label
+                  key={r}
+                  className={`role-item ${
+                    form.role.toLowerCase() === r.toLowerCase() ? "selected" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={r}
+                    checked={form.role.toLowerCase() === r.toLowerCase()}
+                    onChange={handleChange}
+                  />
+                  <span className="role-name">{r}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-</form>
+          <button type="submit" className="btn-signup-premium">
+            Create Account
+          </button>
+        </form>
+
         <p>
           Already have an account? <Link to="/login">Login</Link>
         </p>

@@ -5,6 +5,7 @@ import "./Login.css";
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -39,13 +40,11 @@ const Login = () => {
         return;
       }
 
-      // ✅ Save data
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", role);
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("email", data.email);
 
-      // ✅ Redirect
       if (role === "admin") navigate("/admin/dashboard");
       else if (role === "researcher") navigate("/researcher/dashboard");
       else navigate("/user/dashboard");
@@ -85,18 +84,23 @@ const Login = () => {
             <label>Password</label>
             <div className="password-wrapper">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Enter your password"
                 value={form.password}
                 onChange={handleChange}
                 required
               />
-              <span className="eye-icon">👁</span>
+              <span
+                className="eye-icon"
+                onClick={() => setShowPassword((prev) => !prev)}
+                style={{ cursor: "pointer" }}
+              >
+                {showPassword ? "🙈" : "👁"}
+              </span>
             </div>
           </div>
 
-          {/* ✅ FIXED */}
           <div className="forgot-password">
             <Link to="/forgot-password">Forgot password?</Link>
           </div>

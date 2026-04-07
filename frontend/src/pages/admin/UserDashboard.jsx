@@ -425,7 +425,6 @@ const getInitials = (name) => {
 
   <div className="profile-details">
     <h4>{user.name || "User"}</h4>
-    <p>{user.region || "No region set"}</p>
   </div>
 
   <div className="status-badge">● Active field</div>
