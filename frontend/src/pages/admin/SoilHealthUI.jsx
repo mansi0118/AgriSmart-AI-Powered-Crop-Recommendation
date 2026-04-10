@@ -221,7 +221,9 @@ function SoilHealthUI() {
                   ]
                 }
               }]}
-              layout={{ width: 300, height: 250 }}
+              layout={{ autosize: true, height: 220, margin: { t: 30, b: 20, l: 20, r: 20 } }}
+              useResizeHandler={true}
+              style={{ width: "100%" }}
             />
           </div>
 
