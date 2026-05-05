@@ -13,6 +13,9 @@ from .views import (
     update_user,
     add_field,
     get_fields,
+    soil_health_api,
+    season_api,
+    nutrient_api
     
 )
 
@@ -38,4 +41,7 @@ urlpatterns = [
     path('researchers/<int:pk>/', researcher_list, name='researcher-detail'),
     path('add-field/', add_field, name='add-field'),
     path('fields/', get_fields, name='get-fields'),
+    path('soil-health/', soil_health_api),
+    path('season/', season_api),
+    path('nutrient/', nutrient_api),
 ]

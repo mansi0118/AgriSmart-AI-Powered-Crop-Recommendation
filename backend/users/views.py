@@ -328,3 +328,49 @@ class ForgotPasswordView(APIView):
         )
 
         return Response({"message": "Reset link sent to your email ✅"})
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../crop_ml')))
+
+from crop_ml.model_utils import predict_soil_health, predict_season, predict_nutrient
+
+
+@api_view(['POST'])
+def soil_health_api(request):
+    data = request.data
+
+    result = predict_soil_health([
+        data.get("N"),
+        data.get("P"),
+        data.get("K"),
+        data.get("ph"),
+    ])
+
+    return Response({"soil_health": result})
+
+
+@api_view(['POST'])
+def season_api(request):
+    data = request.data
+
+    result = predict_season([
+        data.get("temperature"),
+        data.get("humidity"),
+        data.get("rainfall"),
+    ])
+
+    return Response({"season": result})
+
+
+@api_view(['POST'])
+def nutrient_api(request):
+    data = request.data
+
+    result = predict_nutrient([
+        data.get("N"),
+        data.get("P"),
+        data.get("K"),
+    ])
+
+    return Response({"deficiency": result})

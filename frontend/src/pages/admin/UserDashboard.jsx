@@ -30,7 +30,7 @@ export default function UserDashboard() {
   const [user, setUser] = useState({ name: "", email: "", role: "" });
 
   useEffect(() => {
-  fetch("http://127.0.0.1:8000/api/users/researchers/")
+  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/")
     .then(res => res.json())
     .then(data => setResearchData(data))
     .catch(err => console.error("Research fetch error:", err));
@@ -108,7 +108,7 @@ const handleSaveSettings = async () => {
   setIsSaving(true);
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch("http://127.0.0.1:8000/api/users/update_user/", {
+    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/update_user/", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -248,7 +248,7 @@ const [isSaving, setIsSaving] = useState(false);
   const fetchFields = async () => {
   const token = localStorage.getItem("token");
 
-  const res = await fetch("http://127.0.0.1:8000/api/users/fields/", {
+  const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/fields/", {
     headers: {
       Authorization: `Token ${token}`,
     },
@@ -283,7 +283,7 @@ useEffect(() => {
   useEffect(() => {
   const token = localStorage.getItem("token");
 
-  fetch("http://127.0.0.1:8000/api/users/profile/", {
+  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/profile/", {
     headers: {
       Authorization: `Token ${token}`
     }
@@ -343,7 +343,7 @@ useEffect(() => {
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/users/add-field/", {
+    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/add-field/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -377,7 +377,7 @@ useEffect(() => {
   if (!confirmLogout) return;
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/users/logout/", {
+    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/logout/", {
       method: "POST",
       credentials: "include", // important for session
     });

@@ -22,7 +22,7 @@ const fetchPendingResearchers = () =>
   );
 
 const fetchVerifiedUsers = async () => {
-  const res = await fetch("http://localhost:8000/api/users/");
+  const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/");
   if (!res.ok) throw new Error("Failed to fetch users");
   return res.json();
 };
@@ -139,7 +139,7 @@ const deleteResearcher = (id) => {
 
     const token = localStorage.getItem("token");
 
-    fetch(`http://localhost:8000/api/users/researchers/${id}/`, {
+    fetch(`https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/${id}/`, {
       method: "DELETE",
       headers: {
         "Authorization": `Token ${token}`,
@@ -198,12 +198,12 @@ useEffect(() => {
   if (fetched.current) return;
   fetched.current = true;
 
-  fetch("http://localhost:8000/api/users/")
+  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/")
     .then(r => r.json())
     .then(data => setVerified(data))
     .catch(() => setVerified([]));
 
-  fetch("http://localhost:8000/api/users/researchers/")
+  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/")
     .then(r => r.json())
     .then(data => setResearchers(data))
     .catch(() => setResearchers([]));
