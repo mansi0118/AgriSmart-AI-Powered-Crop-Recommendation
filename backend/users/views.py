@@ -331,7 +331,7 @@ class ForgotPasswordView(APIView):
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../crop_ml')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from crop_ml.model_utils import predict_soil_health, predict_season, predict_nutrient
 
