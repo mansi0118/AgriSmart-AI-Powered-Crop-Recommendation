@@ -5,7 +5,6 @@ __pycache__/
 .env
 
 # ML Models & Data
-*.pkl
 *.joblib
 *.h5
 *.csv
