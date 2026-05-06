@@ -1,4 +1,4 @@
-import pickle
+import joblib
 import os
 import numpy as np
 
@@ -6,24 +6,12 @@ BASE_DIR = os.path.dirname(__file__)
 
 # ===== LOAD MODELS =====
 
-# Soil Health
-with open(os.path.join(BASE_DIR, "models", "soil_health_model.pkl"), "rb") as f:
-    soil_model = pickle.load(f)
+soil_model = joblib.load(os.path.join(BASE_DIR, "models", "soil_health_model.pkl"))
+season_model = joblib.load(os.path.join(BASE_DIR, "models", "season_model.pkl"))
+nutrient_model = joblib.load(os.path.join(BASE_DIR, "models", "nutrient_deficiency_model.pkl"))
 
-# Season Model
-with open(os.path.join(BASE_DIR, "models", "season_model.pkl"), "rb") as f:
-    season_model = pickle.load(f)
-
-# Nutrient Deficiency
-with open(os.path.join(BASE_DIR, "models", "nutrient_deficiency_model.pkl"), "rb") as f:
-    nutrient_model = pickle.load(f)
-
-# Common tools
-with open(os.path.join(BASE_DIR, "models", "soil_scaler.pkl"), "rb") as f:
-    scaler = pickle.load(f)
-
-with open(os.path.join(BASE_DIR, "models", "label_encoder.pkl"), "rb") as f:
-    label_encoder = pickle.load(f)
+scaler = joblib.load(os.path.join(BASE_DIR, "models", "soil_scaler.pkl"))
+label_encoder = joblib.load(os.path.join(BASE_DIR, "models", "label_encoder.pkl"))
 
 # ===== FUNCTIONS =====
 
