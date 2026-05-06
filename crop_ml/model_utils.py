@@ -18,7 +18,7 @@ label_encoder = joblib.load(os.path.join(BASE_DIR, "models", "label_encoder.pkl"
 def predict_soil_health(data):
     data = np.array(data).reshape(1, -1)
     pred = soil_model.predict(data)
-    return label_encoder.inverse_transform(pred)[0]
+    return float((pred)[0])
 
 
 def predict_season(data):
