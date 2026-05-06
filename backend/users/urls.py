@@ -14,7 +14,6 @@ from .views import (
     add_field,
     get_fields,
     soil_health_api,
-    weather_api,
     predict
 
 )

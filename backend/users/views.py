@@ -339,7 +339,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from crop_ml.model_utils import predict_soil_health
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-model_path = os.path.join(BASE_DIR, '../crop_ml/models/season_model.pkl')
+model_path = os.path.join(BASE_DIR, 'crop_ml', 'models', 'season_model.pkl')
 
 with open(model_path, 'rb') as f:
     crop_model = pickle.load(f)
@@ -396,7 +396,7 @@ def predict(request):
         prediction = crop_model.predict(features)
 
         return Response({
-            "crop": prediction[0]
+            "crop": str(prediction[0])
         })
 
     except Exception as e:
