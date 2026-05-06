@@ -85,7 +85,7 @@ function SoilHealthUI() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://127.0.0.1:5000/soil-health", {
+    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/soil-health/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -94,10 +94,21 @@ function SoilHealthUI() {
     });
 
     const data = await res.json();
-    console.log("SOIL DATA:", data);
-    setResult(data);
-  };
+    const score = data.soil_health;
 
+    const getCategory = (score) => {
+      if (score > 70) return "Good";
+      if (score > 40) return "Moderate";
+      return "Poor";
+    };
+
+    setResult({
+      shi: score,
+      category: getCategory(score),
+      deficiencies: [],
+      suggestions: []
+    });
+  };
   return (
     <div className="crop-container">
 
