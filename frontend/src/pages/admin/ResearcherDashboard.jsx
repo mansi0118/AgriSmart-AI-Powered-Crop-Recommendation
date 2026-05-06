@@ -74,7 +74,7 @@ export default function ResearcherDashboard() {
   // Fetch researcher datasets
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://127.0.0.1:8000/api/users/researchers/", {
+    fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/", {
       headers: { Authorization: `Token ${token}` }
     })
       .then(res => res.json())
@@ -93,7 +93,7 @@ export default function ResearcherDashboard() {
   // Fetch user profile
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://127.0.0.1:8000/api/users/profile/", {
+    fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/profile/", {
       headers: { Authorization: `Token ${token}` }
     })
       .then(res => {
@@ -135,7 +135,7 @@ export default function ResearcherDashboard() {
   const fetchFields = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://127.0.0.1:8000/api/users/fields/", {
+      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/fields/", {
         headers: { Authorization: `Token ${token}` }
       });
       if (!res.ok) throw new Error("Failed to fetch fields");
@@ -162,7 +162,7 @@ export default function ResearcherDashboard() {
       return alert("Please fill all details");
     }
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/users/add-field/", {
+      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/add-field/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -227,7 +227,7 @@ export default function ResearcherDashboard() {
   setIsUploading(true);
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch("http://127.0.0.1:8000/api/users/researchers/add/", { // ✅ correct URL
+    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/add/", { // ✅ correct URL
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -257,7 +257,7 @@ export default function ResearcherDashboard() {
     setIsSaving(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://127.0.0.1:8000/api/users/update_user/", {
+      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/update_user/", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -305,7 +305,7 @@ export default function ResearcherDashboard() {
   const handleLogout = async () => {
     if (!window.confirm("Are you sure you want to logout?")) return;
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/users/logout/", {
+      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/logout/", {
         method: "POST",
         credentials: "include"
       });

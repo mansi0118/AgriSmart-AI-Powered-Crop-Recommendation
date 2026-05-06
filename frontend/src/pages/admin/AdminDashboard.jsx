@@ -159,7 +159,7 @@ const deleteResearcher = (id) => {
 useEffect(() => {
   const token = localStorage.getItem("token");
 
-  fetch("http://127.0.0.1:8000/api/users/profile/", {
+  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/profile/", {
     headers: {
       Authorization: `Token ${token}`
     }
