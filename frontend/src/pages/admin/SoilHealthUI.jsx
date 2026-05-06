@@ -102,11 +102,37 @@ function SoilHealthUI() {
       return "Poor";
     };
 
+    const suggestions = [];
+    const deficiencies = [];
+
+    if (formData.N < 50) {
+      deficiencies.push("Nitrogen Low");
+      suggestions.push("Add urea or compost for Nitrogen");
+    }
+
+    if (formData.P < 30) {
+      deficiencies.push("Phosphorus Low");
+      suggestions.push("Use DAP fertilizer");
+    }
+
+    if (formData.K < 30) {
+      deficiencies.push("Potassium Low");
+      suggestions.push("Add potash fertilizer");
+    }
+
+    if (formData.pH < 6.5) {
+      suggestions.push("Add lime to reduce acidity");
+    }
+
+    if (formData.pH > 7.5) {
+      suggestions.push("Use gypsum to reduce alkalinity");
+    }
+
     setResult({
       shi: score,
       category: getCategory(score),
-      deficiencies: [],
-      suggestions: []
+      deficiencies,
+      suggestions
     });
   };
   return (
