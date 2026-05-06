@@ -348,24 +348,23 @@ def soil_health_api(request):
     try:
         data = request.data
 
-        required_fields = ["N","P","K","ph","Fe","Zn","Cu","Mn","B","Mo","OC"]
+        required_fields = ["N","P","K","EC","OC","ph","S","Fe","Zn","Mn","Cu"]
 
         if not all(k in data for k in required_fields):
             return Response({"error": "Missing required fields"}, status=400)
 
-        # Convert all to float
         features = [
             float(data.get("N")),
             float(data.get("P")),
             float(data.get("K")),
-            float(data.get("ph")),
+            float(data.get("EC")),
+            float(data.get("OC")),
+            float(data.get("ph")),   # note: training me pH tha, yaha ph aa raha hai
+            float(data.get("S")),
             float(data.get("Fe")),
             float(data.get("Zn")),
-            float(data.get("Cu")),
             float(data.get("Mn")),
-            float(data.get("B")),
-            float(data.get("Mo")),
-            float(data.get("OC")),
+            float(data.get("Cu")),
         ]
 
         result = predict_soil_health(features)
@@ -374,7 +373,6 @@ def soil_health_api(request):
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-
 # =========================
 # 🌦️ SEASON API
 # =========================
