@@ -348,7 +348,7 @@ def soil_health_api(request):
     try:
         data = request.data
 
-        required_fields = ["N","P","K","EC","OC","ph","S","Fe","Zn","Mn","Cu"]
+        required_fields = ["N","P","K","EC","OC","pH","S","Fe","Zn","Mn","Cu"]
 
         if not all(k in data for k in required_fields):
             return Response({"error": "Missing required fields"}, status=400)
@@ -359,7 +359,7 @@ def soil_health_api(request):
             float(data.get("K")),
             float(data.get("EC")),
             float(data.get("OC")),
-            float(data.get("ph")),   # note: training me pH tha, yaha ph aa raha hai
+            float(data.get("pH")),   # note: training me pH tha, yaha ph aa raha hai
             float(data.get("S")),
             float(data.get("Fe")),
             float(data.get("Zn")),
