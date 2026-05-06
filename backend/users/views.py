@@ -348,23 +348,32 @@ def soil_health_api(request):
     try:
         data = request.data
 
-        # Validate input
-        if not all(k in data for k in ["N", "P", "K", "ph"]):
+        required_fields = ["N","P","K","ph","Fe","Zn","Cu","Mn","B","Mo","OC"]
+
+        if not all(k in data for k in required_fields):
             return Response({"error": "Missing required fields"}, status=400)
 
-        # Convert to float
-        N = float(data.get("N"))
-        P = float(data.get("P"))
-        K = float(data.get("K"))
-        ph = float(data.get("ph"))
+        # Convert all to float
+        features = [
+            float(data.get("N")),
+            float(data.get("P")),
+            float(data.get("K")),
+            float(data.get("ph")),
+            float(data.get("Fe")),
+            float(data.get("Zn")),
+            float(data.get("Cu")),
+            float(data.get("Mn")),
+            float(data.get("B")),
+            float(data.get("Mo")),
+            float(data.get("OC")),
+        ]
 
-        result = predict_soil_health([N, P, K, ph])
+        result = predict_soil_health(features)
 
         return Response({"soil_health": result})
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-
 
 # =========================
 # 🌦️ SEASON API
@@ -374,20 +383,23 @@ def season_api(request):
     try:
         data = request.data
 
-        if not all(k in data for k in ["temperature", "humidity", "rainfall"]):
+        required_fields = ["temperature", "humidity", "rainfall"]
+
+        if not all(k in data for k in required_fields):
             return Response({"error": "Missing required fields"}, status=400)
 
-        temperature = float(data.get("temperature"))
-        humidity = float(data.get("humidity"))
-        rainfall = float(data.get("rainfall"))
+        features = [
+            float(data.get("temperature")),
+            float(data.get("humidity")),
+            float(data.get("rainfall")),
+        ]
 
-        result = predict_season([temperature, humidity, rainfall])
+        result = predict_season(features)
 
         return Response({"season": result})
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-
 
 # =========================
 # 🧪 NUTRIENT DEFICIENCY API
@@ -397,14 +409,18 @@ def nutrient_api(request):
     try:
         data = request.data
 
-        if not all(k in data for k in ["N", "P", "K"]):
+        required_fields = ["N","P","K"]
+
+        if not all(k in data for k in required_fields):
             return Response({"error": "Missing required fields"}, status=400)
 
-        N = float(data.get("N"))
-        P = float(data.get("P"))
-        K = float(data.get("K"))
+        features = [
+            float(data.get("N")),
+            float(data.get("P")),
+            float(data.get("K")),
+        ]
 
-        result = predict_nutrient([N, P, K])
+        result = predict_nutrient(features)
 
         return Response({"deficiency": result})
 
