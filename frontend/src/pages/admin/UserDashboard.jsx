@@ -210,7 +210,7 @@ const handleSaveSettings = async () => {
     const fetchWeather = async () => {
       try {
         const res = await fetch(
-          `https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/weather?lat=${inputLat}&lon=${inputLng}`
+          `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}`
         );
 
         const data = await res.json();
