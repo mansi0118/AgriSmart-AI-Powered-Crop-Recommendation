@@ -328,49 +328,85 @@ class ForgotPasswordView(APIView):
         )
 
         return Response({"message": "Reset link sent to your email ✅"})
+
 import sys
 import os
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
+# Path fix
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from crop_ml.model_utils import predict_soil_health, predict_season, predict_nutrient
 
 
+# =========================
+# 🌱 SOIL HEALTH API
+# =========================
 @api_view(['POST'])
 def soil_health_api(request):
-    data = request.data
+    try:
+        data = request.data
 
-    result = predict_soil_health([
-        data.get("N"),
-        data.get("P"),
-        data.get("K"),
-        data.get("ph"),
-    ])
+        # Validate input
+        if not all(k in data for k in ["N", "P", "K", "ph"]):
+            return Response({"error": "Missing required fields"}, status=400)
 
-    return Response({"soil_health": result})
+        # Convert to float
+        N = float(data.get("N"))
+        P = float(data.get("P"))
+        K = float(data.get("K"))
+        ph = float(data.get("ph"))
+
+        result = predict_soil_health([N, P, K, ph])
+
+        return Response({"soil_health": result})
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 
+# =========================
+# 🌦️ SEASON API
+# =========================
 @api_view(['POST'])
 def season_api(request):
-    data = request.data
+    try:
+        data = request.data
 
-    result = predict_season([
-        data.get("temperature"),
-        data.get("humidity"),
-        data.get("rainfall"),
-    ])
+        if not all(k in data for k in ["temperature", "humidity", "rainfall"]):
+            return Response({"error": "Missing required fields"}, status=400)
 
-    return Response({"season": result})
+        temperature = float(data.get("temperature"))
+        humidity = float(data.get("humidity"))
+        rainfall = float(data.get("rainfall"))
+
+        result = predict_season([temperature, humidity, rainfall])
+
+        return Response({"season": result})
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 
+# =========================
+# 🧪 NUTRIENT DEFICIENCY API
+# =========================
 @api_view(['POST'])
 def nutrient_api(request):
-    data = request.data
+    try:
+        data = request.data
 
-    result = predict_nutrient([
-        data.get("N"),
-        data.get("P"),
-        data.get("K"),
-    ])
+        if not all(k in data for k in ["N", "P", "K"]):
+            return Response({"error": "Missing required fields"}, status=400)
 
-    return Response({"deficiency": result})
+        N = float(data.get("N"))
+        P = float(data.get("P"))
+        K = float(data.get("K"))
+
+        result = predict_nutrient([N, P, K])
+
+        return Response({"deficiency": result})
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
