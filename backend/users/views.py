@@ -15,8 +15,14 @@ import requests
 from django.conf import settings
 from .serializers import SignupSerializer, LoginSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+import sys
 import os
 from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+sys.path.append(str(BASE_DIR))
+
 from crop_ml.model_utils import predict_soil_health
 from django.core.mail import send_mail
 
