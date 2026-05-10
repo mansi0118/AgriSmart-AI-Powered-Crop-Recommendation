@@ -20,7 +20,8 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
-
+const API_BASE = process.env.REACT_APP_API_URL;
+const WEATHER_API = process.env.REACT_APP_WEATHER_API_KEY;
 export default function ResearcherDashboard() {
 
   // --- CORE STATE ---
@@ -115,17 +116,39 @@ export default function ResearcherDashboard() {
   // Live weather debounce
   useEffect(() => {
     const timeout = setTimeout(() => {
+
       if (!inputLat || !inputLng) return;
-      fetch(`http://127.0.0.1:5000/weather?lat=${inputLat}&lon=${inputLng}`)
-        .then(res => res.json())
-        .then(data => setDashboardWeather({
-          temp: data.temperature,
-          humidity: data.humidity,
-          rainfall: data.rainfall
-        }))
-        .catch(err => console.error("Weather fetch error:", err));
+
+      const fetchWeather = async () => {
+        try {
+
+          const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}&appid=${WEATHER_API}&units=metric`
+          );
+
+          if (!res.ok) {
+            throw new Error("Weather API failed");
+          }
+
+          const data = await res.json();
+
+          setDashboardWeather({
+            temp: data.main?.temp,
+            humidity: data.main?.humidity,
+            rainfall: data.rain ? data.rain["1h"] || 0 : 0
+          });
+
+        } catch (err) {
+          console.error("Weather fetch error:", err);
+        }
+      };
+
+      fetchWeather();
+
     }, 800);
+
     return () => clearTimeout(timeout);
+
   }, [inputLat, inputLng]);
 
   // ============================================================
@@ -198,7 +221,7 @@ export default function ResearcherDashboard() {
         latitude: parseFloat(inputLat),
         longitude: parseFloat(inputLng)
       };
-      const res = await fetch("http://127.0.0.1:5000/predict", {
+      const res = await fetch("${API_BASE}/api/users/predict/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -281,7 +304,7 @@ export default function ResearcherDashboard() {
   const handleSearchLocation = async () => {
     if (!place.trim()) { alert("Please enter a location"); return; }
     try {
-      const res = await fetch(`http://127.0.0.1:5000/geocode?place=${place}`);
+      const res = await fetch(`${API_BASE}/api/users/geocode/?place=${place}`);
       const data = await res.json();
       if (data.error) { alert(data.error); return; }
       setInputLat(data.lat);
@@ -672,13 +695,26 @@ export default function ResearcherDashboard() {
                               setShowSoilModal(true);
                               try {
                                 setLoadingPrediction(true);
-                                const weatherRes = await fetch(`http://127.0.0.1:5000/weather?lat=${clickedData.lat}&lon=${clickedData.lng}`);
+                                const weatherRes = await fetch(
+                                  `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}&appid=${WEATHER_API}&units=metric`
+                                );
+
                                 const weatherData = await weatherRes.json();
-                                const res = await fetch("http://127.0.0.1:5000/predict", {
+
+                                const res = await fetch(`${API_BASE}/api/users/predict/`, {
                                   method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ Nitrogen: clickedData.N, Phosphorus: clickedData.P, Potassium: clickedData.K, Ph: clickedData.ph, latitude: clickedData.lat,     // ✅ ADD THIS
-                                    longitude: clickedData.lng  })
+                                  headers: {
+                                    "Content-Type": "application/json"
+                                  },
+                                  body: JSON.stringify({
+                                    N: clickedData.N,
+                                    P: clickedData.P,
+                                    K: clickedData.K,
+                                    ph: clickedData.ph,
+                                    temperature: weatherData.main.temp,
+                                    humidity: weatherData.main.humidity,
+                                    rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0
+                                  })
                                 });
                                 const data = await res.json();
                                 setSoilPrediction(data.recommendations || []);

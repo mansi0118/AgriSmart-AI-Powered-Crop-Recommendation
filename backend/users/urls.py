@@ -14,7 +14,8 @@ from .views import (
     add_field,
     get_fields,
     soil_health_api,
-    predict
+    predict,
+    geocode_api
 
 )
 
@@ -42,5 +43,5 @@ urlpatterns = [
     path('fields/', get_fields, name='get-fields'),
     path('soil-health/', soil_health_api),
     path('predict/', predict),
-    path('weather/', weather_api)
+    path('geocode/', geocode_api)
 ]

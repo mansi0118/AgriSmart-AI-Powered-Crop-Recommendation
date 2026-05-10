@@ -1,4 +1,5 @@
-from django.conf import settings
+from copyreg import pickle
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,13 +12,14 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-# views.py ke TOP pe ye do lines add karo
+import requests
 from django.conf import settings
-
-
 from .serializers import SignupSerializer, LoginSerializer
-
+from django.contrib.auth import logout
+from rest_framework_simplejwt.tokens import RefreshToken
+import os
+from pathlib import Path
+from crop_ml.model_utils import predict_soil_health
 
 # =========================
 # 👤 GET PROFILE
@@ -207,14 +209,6 @@ def update_user(request):
         "full_name": user.full_name,
         "email": user.email,
     })
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from django.contrib.auth import logout
-
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-
 @api_view(['POST'])
 def logout_user(request):
     try:
@@ -316,7 +310,9 @@ class ForgotPasswordView(APIView):
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        reset_link = f"http://localhost:3000/reset-password/{uid}/{token}/"
+        FRONTEND_URL = "https://agri-smart-ai-powered-crop-recommen.vercel.app/"
+
+        reset_link = f"{FRONTEND_URL}/reset-password/{uid}/{token}/"
 
         # ✅ ACTUAL EMAIL BHEJO
         send_mail(
@@ -329,19 +325,15 @@ class ForgotPasswordView(APIView):
 
         return Response({"message": "Reset link sent to your email ✅"})
 
-import sys
-import os
-import pickle
-import numpy as np
-# Path fix
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-from crop_ml.model_utils import predict_soil_health
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-model_path = os.path.join(BASE_DIR, 'crop_ml', 'models', 'season_model.pkl')
-
-with open(model_path, 'rb') as f:
+model_path = os.path.join(
+    BASE_DIR,
+    'crop_ml',
+    'models',
+    'season_model.pkl'
+)
+with open(model_path, "rb") as f:
     crop_model = pickle.load(f)
 
 # =========================
@@ -397,6 +389,32 @@ def predict(request):
 
         return Response({
             "crop": str(prediction[0])
+        })
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+    
+
+@api_view(['GET'])
+def geocode_api(request):
+    try:
+        place = request.GET.get("place")
+
+        url = f"https://nominatim.openstreetmap.org/search?q={place}&format=json&limit=1"
+
+        headers = {
+            "User-Agent": "AgriSmart"
+        }
+
+        response = requests.get(url, headers=headers)
+        data = response.json()
+
+        if not data:
+            return Response({"error": "Location not found"}, status=404)
+
+        return Response({
+            "lat": data[0]["lat"],
+            "lon": data[0]["lon"]
         })
 
     except Exception as e:

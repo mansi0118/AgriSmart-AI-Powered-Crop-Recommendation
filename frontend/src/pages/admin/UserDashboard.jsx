@@ -6,13 +6,13 @@ import Weather from "./Weather";
 import { MapContainer, TileLayer, Marker, Popup, Rectangle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useMapEvents } from "react-leaflet"; 
+
 import L from 'leaflet'; 
 import { 
   Cloud, Sun, Wind, Eye, Gauge, Map, Settings, 
   LayoutDashboard, CloudRain, Wheat, Navigation, X, LogOut, 
   Database, FileText, Download} from "lucide-react";
 import "./Users.css";
-
 // --- Leaflet Icon Fix ---
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -20,7 +20,8 @@ L.Icon.Default.mergeOptions({
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
-
+const API_BASE = process.env.REACT_APP_API_URL;
+const WEATHER_API = process.env.REACT_APP_WEATHER_API_KEY;
 export default function UserDashboard() {
   
   const [inputLat, setInputLat] = useState("27.80");
@@ -70,8 +71,7 @@ useEffect(() => {
         Ph: Number(ph)
       };
     }
-
-    const res = await fetch("http://127.0.0.1:5000/predict", {
+    const res = await fetch(`${API_BASE}/api/users/predict/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -183,9 +183,7 @@ const handleSaveSettings = async () => {
   }
 
   try {
-    const res = await fetch(
-      `http://127.0.0.1:5000/geocode?place=${place}`
-    );
+    const res = await fetch(`${API_BASE}/api/users/geocode/?place=${place}`);
 
     const data = await res.json();
 
@@ -210,15 +208,15 @@ const handleSaveSettings = async () => {
     const fetchWeather = async () => {
       try {
         const res = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}`
+          `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}&appid=${WEATHER_API}&units=metric`
         );
 
         const data = await res.json();
 
         setDashboardWeather({
-          temp: data.temperature,
-          humidity: data.humidity,
-          rainfall: data.rainfall
+          temp: data.main?.temp,
+          humidity: data.main?.humidity,
+          rainfall: data.rain ? data.rain["1h"] || 0 : 0
         });
 
       } catch (err) {
@@ -882,23 +880,25 @@ const getInitials = (name) => {
 
                                 // ✅ 1. WEATHER FETCH
                                 const weatherRes = await fetch(
-                                  `http://127.0.0.1:5000/weather?lat=${clickedData.lat}&lon=${clickedData.lng}`
+                                  `https://api.openweathermap.org/data/2.5/weather?lat=${clickedData.lat}&lon=${clickedData.lng}&appid=${WEATHER_API}&units=metric`
                                 );
+
                                 const weather = await weatherRes.json();
 
                                 // ✅ 2. MODEL CALL
-                                const res = await fetch("http://127.0.0.1:5000/predict", {
+                                const res = await fetch(`${API_BASE}/api/users/predict/`, {
                                   method: "POST",
                                   headers: {
                                     "Content-Type": "application/json"
                                   },
                                   body: JSON.stringify({
-                                    Nitrogen: clickedData.N,
-                                    Phosphorus: clickedData.P,
-                                    Potassium: clickedData.K,
-                                    Ph: clickedData.ph,
-                                    latitude: clickedData.lat,     // ✅ ADD THIS
-                                    longitude: clickedData.lng 
+                                    N: clickedData.N,
+                                    P: clickedData.P,
+                                    K: clickedData.K,
+                                    ph: clickedData.ph,
+                                    temperature: weather.main.temp,
+                                    humidity: weather.main.humidity,
+                                    rainfall: weather.rain ? weather.rain["1h"] || 0 : 0
                                   })
                                 });
 
