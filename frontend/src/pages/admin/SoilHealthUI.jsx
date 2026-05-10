@@ -85,7 +85,7 @@ function SoilHealthUI() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/soil-health/", {
+    const res = await fetch("${API_BASE}/api/users/soil-health/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

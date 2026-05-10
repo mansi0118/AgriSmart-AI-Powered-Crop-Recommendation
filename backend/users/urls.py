@@ -30,18 +30,19 @@ urlpatterns = [
     path('reset-password/<str:uidb64>/<str:token>/', ResetPasswordView.as_view(), name='reset-password'),
 
     # 👤 User APIs
-    path('profile/', get_profile, name='get-profile'),  # OR UserProfileView.as_view()
+    path('profile/', get_profile, name='get-profile'), 
     path('update_user/', update_user, name='update-user'),
-    path('', users_list, name='users-list'),  # OR UserListView.as_view()
     path('get_user_by_email/<str:email>/', get_user_by_email, name='get-user-by-email'),
 
     # 👨‍🔬 Researcher APIs
-    path('researchers/add/', researcher_add, name='researcher-add'),        # ✅ UPAR
+    path('researchers/add/', researcher_add, name='researcher-add'),     
     path('researchers/', researcher_list, name='researcher-list'),
     path('researchers/<int:pk>/', researcher_list, name='researcher-detail'),
     path('add-field/', add_field, name='add-field'),
     path('fields/', get_fields, name='get-fields'),
-    path('soil-health/', soil_health_api),
-    path('predict/', predict),
-    path('geocode/', geocode_api)
+    path('soil-health/', soil_health_api, name='soil-health'),
+    path('predict/', predict, name='predict'),
+    path('geocode/', geocode_api, name='geocode'),
+
+    path('', users_list, name='users-list'),  # OR UserListView.as_view()
 ]

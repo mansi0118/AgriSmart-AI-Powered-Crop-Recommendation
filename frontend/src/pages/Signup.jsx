@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Signup.css";
-
+const API_BASE = process.env.REACT_APP_API_URL;
 const Signup = () => {
   const [form, setForm] = useState({
     fullName: "",
@@ -14,12 +14,16 @@ const Signup = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [verified, setVerified] = useState(false);
   const [errors, setErrors] = useState({});
+  const [otpLoading, setOtpLoading] = useState(false);
   const navigate = useNavigate();
 
   const ALLOWED_DOMAINS = ["gmail.com", "banasthali.in"];
 
   const isAllowedEmail = (email) => {
+    if (!email.includes("@")) return false;
+
     const domain = email.split("@")[1]?.toLowerCase();
+
     return ALLOWED_DOMAINS.includes(domain);
   };
 
@@ -60,14 +64,14 @@ const Signup = () => {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/accounts/send-otp/", {
+      setOtpLoading(true);
+      const res = await fetch(`${API_BASE}/api/accounts/send-otp/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email }),
       });
 
       const text = await res.text();
-      console.log("RAW:", text);
 
       let data;
       try {
@@ -86,13 +90,16 @@ const Signup = () => {
       console.error("OTP ERROR:", err);
       alert("Server error ❌ (check backend)");
     }
+    finally {
+      setOtpLoading(false);
+    }
   };
 
   // ✅ VERIFY OTP
   const verifyOtp = async () => {
     try {
       const res = await fetch(
-        "http://127.0.0.1:8000/api/accounts/verify-otp/",
+        `${API_BASE}/api/accounts/verify-otp/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -100,7 +107,13 @@ const Signup = () => {
         }
       );
 
-      const data = await res.json();
+      let data;
+
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid server response");
+      }
 
       if (data.message) {
         alert("OTP Verified ✅");
@@ -126,18 +139,24 @@ const Signup = () => {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/users/signup/", {
+      const res = await fetch(`${API_BASE}/api/users/signup/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
-          password: form.password,
+          password: form.password.trim(),
           full_name: form.fullName,
           role: form.role.toLowerCase(),
         }),
       });
 
-      const data = await res.json();
+      let data;
+
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid server response");
+      }
 
       if (res.ok) {
         alert("Signup successful 🎉");
@@ -147,7 +166,7 @@ const Signup = () => {
       }
     } catch (err) {
       console.error(err);
-      alert("Signup failed");
+      alert(err.message || "Signup failed");
     }
   };
 
@@ -185,8 +204,8 @@ const Signup = () => {
           </div>
 
           {/* SEND OTP BUTTON */}
-          <button type="button" className="btn-ghost" onClick={sendOtp}>
-            Send OTP
+          <button type="button" className="btn-ghost" onClick={sendOtp} disabled={otpLoading || verified}>
+            {otpLoading ? "Sending OTP..." : "Send OTP"}
           </button>
 
           {/* OTP INPUT */}

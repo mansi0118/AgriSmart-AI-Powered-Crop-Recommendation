@@ -1,5 +1,4 @@
-from copyreg import pickle
-
+import pickle
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,11 +14,11 @@ from django.contrib.auth import get_user_model
 import requests
 from django.conf import settings
 from .serializers import SignupSerializer, LoginSerializer
-from django.contrib.auth import logout
 from rest_framework_simplejwt.tokens import RefreshToken
 import os
 from pathlib import Path
 from crop_ml.model_utils import predict_soil_health
+from django.core.mail import send_mail
 
 # =========================
 # 👤 GET PROFILE
@@ -88,6 +87,8 @@ class LoginView(APIView):
 # 👥 USERS LIST
 # =========================
 @api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def users_list(request):
     User = get_user_model()
 
@@ -114,6 +115,8 @@ def users_list(request):
 # views.py
 
 @api_view(['GET', 'DELETE'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def researcher_list(request, pk=None):
     from .models import Researcher
 
@@ -292,8 +295,6 @@ class ResetPasswordView(APIView):
 
         return Response({"message": "Password reset successful"})
 
-from django.core.mail import send_mail
-
 class ForgotPasswordView(APIView):
     def post(self, request):
         User = get_user_model()
@@ -310,7 +311,7 @@ class ForgotPasswordView(APIView):
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        FRONTEND_URL = "https://agri-smart-ai-powered-crop-recommen.vercel.app/"
+        FRONTEND_URL = "https://agri-smart-ai-powered-crop-recommen.vercel.app"
 
         reset_link = f"{FRONTEND_URL}/reset-password/{uid}/{token}/"
 
@@ -333,8 +334,13 @@ model_path = os.path.join(
     'models',
     'season_model.pkl'
 )
-with open(model_path, "rb") as f:
-    crop_model = pickle.load(f)
+crop_model = None
+
+try:
+    with open(model_path, "rb") as f:
+        crop_model = pickle.load(f)
+except Exception as e:
+    print("Model loading error:", e)
 
 # =========================
 # 🌱 SOIL HEALTH API
@@ -355,7 +361,7 @@ def soil_health_api(request):
             float(data.get("K")),
             float(data.get("EC")),
             float(data.get("OC")),
-            float(data.get("pH")),   # note: training me pH tha, yaha ph aa raha hai
+            float(data.get("pH")),   
             float(data.get("S")),
             float(data.get("Fe")),
             float(data.get("Zn")),
@@ -375,6 +381,28 @@ def predict(request):
     try:
         data = request.data
 
+        required_fields = [
+            "N",
+            "P",
+            "K",
+            "temperature",
+            "humidity",
+            "ph",
+            "rainfall"
+        ]
+
+        if not all(field in data for field in required_fields):
+            return Response(
+                {"error": "Missing required fields"},
+                status=400
+            )
+
+        if crop_model is None:
+            return Response(
+                {"error": "Crop model not loaded"},
+                status=500
+            )
+
         features = [[
             float(data.get("N")),
             float(data.get("P")),
@@ -388,25 +416,29 @@ def predict(request):
         prediction = crop_model.predict(features)
 
         return Response({
+            "success": True,
             "crop": str(prediction[0])
         })
 
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response(
+            {"error": str(e)},
+            status=500
+        )
     
-
 @api_view(['GET'])
 def geocode_api(request):
     try:
         place = request.GET.get("place")
-
+        if not place:
+            return Response({"error": "Place is required"}, status=400)
         url = f"https://nominatim.openstreetmap.org/search?q={place}&format=json&limit=1"
 
         headers = {
             "User-Agent": "AgriSmart"
         }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers,timeout=10)
         data = response.json()
 
         if not data:

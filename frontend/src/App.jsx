@@ -4,7 +4,7 @@ import Signup from "./pages/Signup.jsx";
 import Login from "./pages/Login.jsx";
 import GetStarted from "./pages/GetStarted.jsx";
 import "./pages/ResetPassword.css";
-
+import { Navigate } from "react-router-dom";
 
 // Dashboards
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
@@ -34,11 +34,6 @@ function App() {
 
         {/* --- 1. ADMIN DASHBOARD --- */}
         <Route path="/admin/dashboard" element={<AdminDashboard />}>
-          <Route index element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
-          <Route path="requests" element={<ResearchRequests />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="weather" element={<Weather />} />
         </Route>
 
         <Route path="/researcher/dashboard/*" element={<ResearcherDashboard />} />
@@ -48,6 +43,7 @@ function App() {
 
         {/* --- 4. GUEST DASHBOARD --- */}
         <Route path="/guest/dashboard/*" element={<GuestDashboard />} />
+        <Route path="*" element={<Home />} />
         
       </Routes>
     </Router>

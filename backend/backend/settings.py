@@ -26,7 +26,11 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'agrismart-ai-powered-crop-recommendation.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -85,7 +89,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://agri-smart-ai-powered-crop-recommen.vercel.app",
 ]
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://agri-smart-ai-powered-crop-recommen.vercel.app",
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -163,3 +169,5 @@ CACHES = {
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

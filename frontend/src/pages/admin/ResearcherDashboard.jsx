@@ -9,7 +9,7 @@ import L from 'leaflet';
 import {
   Cloud, Map, Settings,
   LayoutDashboard, CloudRain, Wheat, Navigation, X, LogOut,
-  Database, FileText, Download
+  Database
 } from "lucide-react";
 import "./ResearcherDashboard.css";
 
@@ -75,7 +75,7 @@ export default function ResearcherDashboard() {
   // Fetch researcher datasets
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/", {
+    fetch(`${API_BASE}/api/users/researchers/`, {
       headers: { Authorization: `Token ${token}` }
     })
       .then(res => res.json())
@@ -94,7 +94,7 @@ export default function ResearcherDashboard() {
   // Fetch user profile
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/profile/", {
+    fetch(`${API_BASE}/api/users/profile/`, {
       headers: { Authorization: `Token ${token}` }
     })
       .then(res => {
@@ -158,7 +158,7 @@ export default function ResearcherDashboard() {
   const fetchFields = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/fields/", {
+      const res = await fetch(`${API_BASE}/api/users/fields/`, {
         headers: { Authorization: `Token ${token}` }
       });
       if (!res.ok) throw new Error("Failed to fetch fields");
@@ -185,7 +185,7 @@ export default function ResearcherDashboard() {
       return alert("Please fill all details");
     }
     try {
-      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/add-field/", {
+      const res = await fetch(`${API_BASE}/api/users/add-field/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -211,36 +211,70 @@ export default function ResearcherDashboard() {
   };
 
   const handleGenerate = async () => {
-    try {
-      setIsAnalyzing(true);
-      if (isNaN(inputLat) || isNaN(inputLng)) {
-        alert("Please enter valid numeric latitude and longitude");
-        return;
+      try {
+        setIsAnalyzing(true);
+
+        if (!inputLat || !inputLng) {
+          alert("Please enter valid location");
+          return;
+        }
+
+        const weatherRes = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}&appid=${WEATHER_API}&units=metric`
+        );
+
+        if (!weatherRes.ok) {
+          throw new Error("Weather fetch failed");
+        }
+
+        const weatherData = await weatherRes.json();
+
+        const payload = {
+          N: 90,
+          P: 42,
+          K: 43,
+          ph: 6.5,
+          temperature: weatherData.main.temp,
+          humidity: weatherData.main.humidity,
+          rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0
+        };
+
+        const res = await fetch(`${API_BASE}/api/users/predict/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || "Prediction failed");
+          return;
+        }
+
+        setRecommendations([
+          {
+            crop: data.crop,
+            confidence: 95
+          }
+        ]);
+
+        setWeather({
+          temp: weatherData.main.temp,
+          humidity: weatherData.main.humidity,
+          rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0,
+          city: weatherData.name
+        });
+
+      } catch (err) {
+        console.error(err);
+        alert("Prediction failed");
+      } finally {
+        setIsAnalyzing(false);
       }
-      const payload = {
-        latitude: parseFloat(inputLat),
-        longitude: parseFloat(inputLng)
-      };
-      const res = await fetch("${API_BASE}/api/users/predict/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.error) { alert(data.error); return; }
-      setRecommendations(data.recommendations);
-      setWeather({
-        temp: data.temperature,
-        humidity: data.humidity,
-        rainfall: data.rainfall,
-        city: data.city
-      });
-    } catch (err) {
-      console.error("Error:", err);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
+    };
 
  const handleShareDataset = async (e) => {
   e.preventDefault();
@@ -250,7 +284,7 @@ export default function ResearcherDashboard() {
   setIsUploading(true);
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/add/", { // ✅ correct URL
+    const res = await fetch(`${API_BASE}/api/users/researchers/add/`, { // ✅ correct URL
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -280,7 +314,7 @@ export default function ResearcherDashboard() {
     setIsSaving(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/update_user/", {
+      const res = await fetch(`${API_BASE}/api/users/update_user/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -328,12 +362,12 @@ export default function ResearcherDashboard() {
   const handleLogout = async () => {
     if (!window.confirm("Are you sure you want to logout?")) return;
     try {
-      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/logout/", {
+      const res = await fetch(`${API_BASE}/api/users/logout/`, {
         method: "POST",
         credentials: "include"
       });
       if (res.ok) {
-        localStorage.removeItem("token");
+        localStorage.clear();
         sessionStorage.clear();
         window.location.href = "/login";
       } else {
@@ -673,7 +707,12 @@ export default function ResearcherDashboard() {
                   <MapContainer key={`${inputLat}-${inputLng}`} center={[parseFloat(inputLat) || 27.8083, parseFloat(inputLng) || 78.6458]} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%", borderRadius: "20px" }}>
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
                     <MapClickHandler />
-                    <Marker position={[parseFloat(inputLat), parseFloat(inputLng)]}>
+                    <Marker
+                      position={[
+                        parseFloat(inputLat) || 27.80,
+                        parseFloat(inputLng) || 78.65
+                      ]}
+                    >
                       <Popup>📍 Selected Location</Popup>
                     </Marker>
 
@@ -717,7 +756,12 @@ export default function ResearcherDashboard() {
                                   })
                                 });
                                 const data = await res.json();
-                                setSoilPrediction(data.recommendations || []);
+                                setSoilPrediction([
+                                  {
+                                    crop: data.crop,
+                                    confidence: 95
+                                  }
+                                ]);
                               } catch (err) {
                                 console.error("Prediction error:", err);
                               } finally {

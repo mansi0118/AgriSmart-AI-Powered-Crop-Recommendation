@@ -1,23 +1,35 @@
 import React, { useState } from "react";
 import "./Login.css"; // same CSS use karlo
 import { Link } from "react-router-dom";
-
+const API_BASE = process.env.REACT_APP_API_URL;
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+     if (!email.trim()) {
+          alert("Please enter email");
+          return;
+        }
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/users/forgot-password/", {
+      const res = await fetch(`${API_BASE}/api/users/forgot-password/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email: email.trim()
+        }),
       });
 
-      const data = await res.json();
+      let data;
+
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid server response");
+      }
 
       if (res.ok) {
         alert("Reset link sent to your email!");
@@ -25,7 +37,7 @@ const ForgotPassword = () => {
         alert(data.error || "Something went wrong!");
       }
     } catch (error) {
-      alert("Server error!");
+      alert(error.message || "Server error!");
     } finally {
       setLoading(false);
     }

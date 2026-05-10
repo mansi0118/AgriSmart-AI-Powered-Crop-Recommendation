@@ -7,27 +7,33 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-
+  const API_BASE = process.env.REACT_APP_API_URL;
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.email || !form.password) {
+      alert("Please fill all fields");
+      return;
+    }
     setLoading(true);
 
     try {
-      const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/login/", {
+      const res = await fetch(`${API_BASE}/api/users/login/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(form),
       });
-
-      const data = await res.json();
-      console.log("LOGIN RESPONSE:", data);
-
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid server response");
+      }
       if (!res.ok) {
         alert(data.error || "Login failed");
         return;
@@ -42,7 +48,7 @@ const Login = () => {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", role);
-      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("user_id", String(data.user_id));
       localStorage.setItem("email", data.email);
 
       if (role === "admin") navigate("/admin/dashboard");
@@ -51,7 +57,7 @@ const Login = () => {
 
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      alert(err.message || "Server error");
     } finally {
       setLoading(false);
     }

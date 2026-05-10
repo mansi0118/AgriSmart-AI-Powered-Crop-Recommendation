@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Auth.css";
-
+const API_BASE = process.env.REACT_APP_API_URL;
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState("user");
@@ -14,27 +14,34 @@ function Auth() {
     e.preventDefault();
     if (isLogin) {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/users/login/", {
+        const res = await fetch(`${API_BASE}/api/users/login/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
+        let data;
+
+        try {
+          data = await res.json();
+        } catch {
+          throw new Error("Invalid server response");
+        }
         if (res.ok) {
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("user_id", data.id);
+          localStorage.setItem("token", String(data.token));
+          localStorage.setItem("user_id", String(data.user_id));
           localStorage.setItem("role", data.role);
           localStorage.setItem("email", data.email);
           localStorage.setItem("full_name", data.full_name);
           alert("Login successful!");
-          if (data.role === "admin") navigate("/admin");
-          else if (data.role === "researcher") navigate("/researcher");
-          else navigate("/landingpage");
+          const role = data.role?.toLowerCase();
+          if (role === "admin") navigate("/admin/dashboard");
+          else if (role === "researcher") navigate("/researcher/dashboard");
+          else navigate("/user/dashboard");
         } else {
           alert(data.non_field_errors?.[0] || "Login failed!");
         }
       } catch (err) {
-        alert("Server error. Is backend running?");
+        alert(err.message || "Server error");
       }
     } else {
       alert("Please use the Signup page for registration.");

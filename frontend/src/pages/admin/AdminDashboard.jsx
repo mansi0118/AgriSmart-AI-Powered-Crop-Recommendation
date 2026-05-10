@@ -1,32 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  LayoutDashboard, Users, Settings,
-  FileText, CheckCircle2, Loader2
+  LayoutDashboard,Settings,
+  FileText, Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// ─── MOCK API (replace with real fetch calls) ───────────────────────────────
-const fetchStats = () =>
-
-  new Promise(resolve =>
-    setTimeout(() => resolve({ totalUsers: 120, activeResearch: 15 }), 900)
-  );
-
-const fetchPendingResearchers = () =>
-  new Promise(resolve =>
-    setTimeout(() => resolve([
-      { id: 1, name: "Dr. Kavita Iyer",  topic: "Soil Alkalinity Analysis",  date: "17 Jan 2026" },
-      { id: 2, name: "Rajesh Kumar",      topic: "Pest Control Mechanisms",   date: "16 Jan 2026" },
-      { id: 3, name: "Dr. Alan Grant",    topic: "Hybrid Wheat Yield Study",  date: "15 Jan 2026" },
-    ]), 700)
-  );
-
-const fetchVerifiedUsers = async () => {
-  const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/");
-  if (!res.ok) throw new Error("Failed to fetch users");
-  return res.json();
-};
-
+const API_BASE = process.env.REACT_APP_API_URL;
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -131,7 +109,8 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 const [isAuthChecked, setIsAuthChecked] = useState(false);
 const handleLogout = () => {
-  localStorage.removeItem("token");
+  localStorage.clear();
+sessionStorage.clear();
   navigate("/login");
 };
 const deleteResearcher = (id) => {
@@ -139,7 +118,7 @@ const deleteResearcher = (id) => {
 
     const token = localStorage.getItem("token");
 
-    fetch(`https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/${id}/`, {
+    fetch(`${API_BASE}/api/users/researchers/${id}/`, {
       method: "DELETE",
       headers: {
         "Authorization": `Token ${token}`,
@@ -159,7 +138,7 @@ const deleteResearcher = (id) => {
 useEffect(() => {
   const token = localStorage.getItem("token");
 
-  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/profile/", {
+  fetch(`${API_BASE}/api/users/profile/`, {
     headers: {
       Authorization: `Token ${token}`
     }
@@ -175,15 +154,16 @@ useEffect(() => {
         role: data.role
       });
 
-      setSettings({
+      setProfile(prev => ({
+        ...prev,
         name: data.full_name,
         email: data.email
-      });
+      }));
     })
     .catch(err => {
       console.error("Profile fetch error:", err);
     });
-}, []);
+}, [navigate]);
 
 useEffect(() => {
   const token = localStorage.getItem("token");
@@ -198,17 +178,25 @@ useEffect(() => {
   if (fetched.current) return;
   fetched.current = true;
 
-  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/")
+  fetch(`${API_BASE}/api/users/`, {
+    headers: {
+      Authorization: `Token ${token}`
+    }
+  })
     .then(r => r.json())
     .then(data => setVerified(data))
     .catch(() => setVerified([]));
 
-  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/")
+  fetch(`${API_BASE}/api/users/researchers/`, {
+    headers: {
+      Authorization: `Token ${token}`
+    }
+  })
     .then(r => r.json())
     .then(data => setResearchers(data))
     .catch(() => setResearchers([]));
 
-}, []);
+}, [navigate]);
 const getInitials = (name) => {
   if (!name) return "U";
   return name
@@ -319,10 +307,10 @@ const getInitials = (name) => {
                         {verified.map(u => (
                           <tr key={u.id}>
                             <td className="dim">#{u.id}</td>
-                            <td className="bold">{u.name}</td>
+                            <td className="bold">{u.full_name || u.name}</td>
                             <td><span className={`badge ${u.role === "admin" ? "orange" : "sky"}`}>{u.role}</span></td>
                             <td className="dim">{u.email}</td>
-                            <td><span className={`badge ${u.status === "Active" ? "green" : "sky"}`}>{u.status}</span></td>
+                            <td><span className={`badge ${u.status === "Active" ? "green" : "sky"}`}>{u.status || "Active"}</span></td>
                           </tr>
                         ))}
                       </tbody>

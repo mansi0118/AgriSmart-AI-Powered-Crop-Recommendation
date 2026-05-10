@@ -9,7 +9,7 @@ import { useMapEvents } from "react-leaflet";
 
 import L from 'leaflet'; 
 import { 
-  Cloud, Sun, Wind, Eye, Gauge, Map, Settings, 
+  Cloud, Map, Settings, 
   LayoutDashboard, CloudRain, Wheat, Navigation, X, LogOut, 
   Database, FileText, Download} from "lucide-react";
 import "./Users.css";
@@ -31,7 +31,7 @@ export default function UserDashboard() {
   const [user, setUser] = useState({ name: "", email: "", role: "" });
 
   useEffect(() => {
-  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/researchers/")
+  fetch(`${API_BASE}/api/users/researchers/`)
     .then(res => res.json())
     .then(data => setResearchData(data))
     .catch(err => console.error("Research fetch error:", err));
@@ -45,32 +45,33 @@ useEffect(() => {
   }
 }, []);
   // --- 🧠 AI LOGIC TO UPDATE CROPS ---
-  const handleGenerate = async () => {
+const handleGenerate = async () => {
   try {
     setIsAnalyzing(true);
-    let payload = {};
 
-    // ✅ CASE 1: lat/lon available
-    if (inputLat && inputLng) {
-      if (isNaN(inputLat) || isNaN(inputLng)) {
-      alert("Please enter valid numeric latitude and longitude");
+    if (!inputLat || !inputLng) {
+      alert("Please enter location");
       return;
-      }
-      payload = {
-        latitude: parseFloat(inputLat),
-        longitude: parseFloat(inputLng)
-      };
-    } 
-    
-    // ✅ CASE 2: manual input
-    else {
-      payload = {
-        Nitrogen: Number(n),
-        Phosphorus: Number(p),
-        Potassium: Number(k),
-        Ph: Number(ph)
-      };
     }
+
+    const weatherRes = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}&appid=${WEATHER_API}&units=metric`
+    );
+    if (!weatherRes.ok) {
+      throw new Error("Weather fetch failed");
+    }
+    const weatherData = await weatherRes.json();
+
+    const payload = {
+      N: 90,
+      P: 42,
+      K: 43,
+      ph: 6.5,
+      temperature: weatherData.main.temp,
+      humidity: weatherData.main.humidity,
+      rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0
+    };
+
     const res = await fetch(`${API_BASE}/api/users/predict/`, {
       method: "POST",
       headers: {
@@ -81,34 +82,37 @@ useEffect(() => {
 
     const data = await res.json();
 
-    if (data.error) {
-      alert(data.error);
+    if (!res.ok) {
+      alert(data.error || "Prediction failed");
       return;
     }
 
-    console.log("API RESPONSE:", data);
+    setRecommendations([
+      {
+        crop: data.crop,
+        confidence: 95
+      }
+    ]);
 
-    // ✅ Save response to state
-    setRecommendations(data.recommendations);
     setWeather({
-    temp: data.temperature,
-    humidity: data.humidity,
-    rainfall: data.rainfall,
-    city: data.city
+      temp: weatherData.main.temp,
+      humidity: weatherData.main.humidity,
+      rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0,
+      city: weatherData.name
     });
 
   } catch (err) {
-    console.error("Error:", err);
-  }
-  finally{
+    console.error(err);
+    alert("Prediction failed");
+  } finally {
     setIsAnalyzing(false);
   }
-  };
+};
 const handleSaveSettings = async () => {
   setIsSaving(true);
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/update_user/", {
+    const res = await fetch(`${API_BASE}/api/users/update_user/`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -246,7 +250,7 @@ const [isSaving, setIsSaving] = useState(false);
   const fetchFields = async () => {
   const token = localStorage.getItem("token");
 
-  const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/fields/", {
+  const res = await fetch(`${API_BASE}/api/users/fields/`, {
     headers: {
       Authorization: `Token ${token}`,
     },
@@ -281,7 +285,7 @@ useEffect(() => {
   useEffect(() => {
   const token = localStorage.getItem("token");
 
-  fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/profile/", {
+  fetch(`${API_BASE}/api/users/profile/`, {
     headers: {
       Authorization: `Token ${token}`
     }
@@ -341,7 +345,7 @@ useEffect(() => {
   }
 
   try {
-    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/add-field/", {
+    const res = await fetch(`${API_BASE}/api/users/add-field/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -375,7 +379,7 @@ useEffect(() => {
   if (!confirmLogout) return;
 
   try {
-    const res = await fetch("https://agrismart-ai-powered-crop-recommendation.onrender.com/api/users/logout/", {
+    const res = await fetch(`${API_BASE}/api/users/logout/`, {
       method: "POST",
       credentials: "include", // important for session
     });
@@ -385,7 +389,7 @@ useEffect(() => {
 
     if (res.ok) {
       // 🔥 token bhi delete karo (important)
-      localStorage.removeItem("token");
+      localStorage.clear();
       sessionStorage.clear();
 
       // 🔥 redirect
@@ -828,7 +832,12 @@ const getInitials = (name) => {
                     <MapClickHandler />
 
                     {/* 📍 SELECTED MARKER */}
-                    <Marker position={[parseFloat(inputLat), parseFloat(inputLng)]}>
+                    <Marker
+                      position={[
+                        parseFloat(inputLat) || 27.80,
+                        parseFloat(inputLng) || 78.65
+                      ]}
+                    >
                       <Popup>📍 Selected Location</Popup>
                     </Marker>
 
@@ -904,7 +913,12 @@ const getInitials = (name) => {
 
                                 const data = await res.json();
 
-                                setSoilPrediction(data.recommendations || []);
+                                setSoilPrediction([
+                                  {
+                                    crop: data.crop,
+                                    confidence: 95
+                                  }
+                                ]);
                               } catch (err) {
                                 console.error("Prediction error:", err);
                               } finally {

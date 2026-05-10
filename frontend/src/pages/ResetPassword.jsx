@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import "./Login.css";
 import "./ResetPassword.css";
 
-
+const API_BASE = process.env.REACT_APP_API_URL;
 const ResetPassword = () => {
   const { uidb64, token } = useParams();
   const navigate = useNavigate();
@@ -14,20 +14,26 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirm) return alert("Passwords don't match!");
-    if (password.length < 6) return alert("Password must be at least 6 characters!");
+    if (password.trim().length < 6) return alert("Password must be at least 6 characters!");
 
     setLoading(true);
     try {
       const res = await fetch(
-        `http://127.0.0.1:8000/api/users/reset-password/${uidb64}/${token}/`,
+        `${API_BASE}/api/users/reset-password/${uidb64}/${token}/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password }),
+          body: JSON.stringify({ password: password.trim() }),
         }
       );
 
-      const data = await res.json();
+      let data;
+
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid server response");
+      }
       if (res.ok) {
         alert("Password reset successful! Please login.");
         navigate("/login");
@@ -35,7 +41,7 @@ const ResetPassword = () => {
         alert(data.error || "Something went wrong!");
       }
     } catch (err) {
-      alert("Server error");
+      alert(err.message || "Server error");
     } finally {
       setLoading(false);
     }
