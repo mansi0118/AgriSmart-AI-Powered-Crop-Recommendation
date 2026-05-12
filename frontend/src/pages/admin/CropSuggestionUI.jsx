@@ -32,33 +32,77 @@ function CropSuggestionUI() {
     });
   };
   const [loading, setLoading] = useState(false);
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try{
+const WEATHER_API = process.env.REACT_APP_WEATHER_API_KEY;
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    // STEP 1: Get coordinates from city name
+    const geoRes = await fetch(
+      `${API_BASE}/api/users/geocode/?place=${formData.city}`
+    );
+    const geoData = await geoRes.json();
+
+    if (geoData.error) {
+      alert("City not found: " + geoData.error);
+      return;
+    }
+
+    const lat = geoData.lat;
+    const lon = geoData.lon;
+
+    // STEP 2: Get weather from coordinates
+    const weatherRes = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API}&units=metric`
+    );
+    const weatherData = await weatherRes.json();
+
+    const temperature = weatherData.main?.temp || 0;
+    const humidity = weatherData.main?.humidity || 0;
+    const rainfall = weatherData.rain ? weatherData.rain["1h"] || 0 : 0;
+
+    // STEP 3: Send everything to predict API
     const res = await fetch(`${API_BASE}/api/users/predict/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({
+        N: formData.N,
+        P: formData.P,
+        K: formData.K,
+        ph: formData.ph,
+        temperature,
+        humidity,
+        rainfall,
+      })
     });
 
     let data = {};
-
     try {
       data = await res.json();
     } catch (err) {
       console.error("Invalid JSON:", err);
-      alert("Server error, please try again");
+      alert("Server error");
       return;
     }
+
     if (!res.ok) {
       alert(data.error || "Prediction failed");
       return;
     }
-    setResult(data);
+
+    // STEP 4: Override response weather with real fetched values
+    setResult({
+      ...data,
+      temperature,   // ✅ real weather, not 0
+      humidity,
+      rainfall,
+    });
+
   } catch (err) {
-    console.error("Network error:", err);
-    alert("Network error, please check your connection");
+    console.error(err);
+    alert("Error: " + err.message);
   } finally {
     setLoading(false);
   }
