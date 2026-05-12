@@ -14,13 +14,13 @@ import {
   Database, FileText, Download} from "lucide-react";
 import "./Users.css";
 const cropLabels = {
-  0: "groundnut",
-  1: "maize",
-  2: "mustard",
-  3: "pea",
-  4: "pearl millet",
-  5: "potato",
-  6: "rice"
+  0: "Groundnut",
+  1: "Maize",
+  2: "Mustard",
+  3: "Pea",
+  4: "Pearl Millet",
+  5: "Potato",
+  6: "Rice"
 };
 // --- Leaflet Icon Fix ---
 delete L.Icon.Default.prototype._getIconUrl;
@@ -95,18 +95,21 @@ const handleGenerate = async () => {
       alert("Please enter location");
       return;
     }
+
     const nearestSoil = soilData.find(
       (s) =>
         Math.abs(s.Latitude - parseFloat(inputLat)) < 0.02 &&
         Math.abs(s.Longitude - parseFloat(inputLng)) < 0.02
     );
+
     const weatherRes = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}&appid=${WEATHER_API}&units=metric`
     );
-    if (!weatherRes.ok) {
-      throw new Error("Weather fetch failed");
-    }
+
+    if (!weatherRes.ok) throw new Error("Weather fetch failed");
+
     const weatherData = await weatherRes.json();
+
     const payload = {
       N: nearestSoil?.n || 120,
       P: nearestSoil?.p || 40,
@@ -114,11 +117,17 @@ const handleGenerate = async () => {
       ph: nearestSoil?.pH || 6.5,
       temperature: weatherData.main.temp,
       humidity: weatherData.main.humidity,
-      rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0
+      rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0,
     };
 
-    let data = {};
+    // ✅ FIX: `res` was never defined — added the actual fetch call
+    const res = await fetch(`${API_BASE}/api/users/predict/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
+    let data = {};
     try {
       data = await res.json();
     } catch (err) {
@@ -130,23 +139,34 @@ const handleGenerate = async () => {
       return;
     }
 
-    setRecommendations(
-    data.top_3_crops.map((item) => ({
-      crop: cropLabels[item.crop] || item.crop,
-      confidence: item.confidence
-    }))
-  );
+    // ✅ FIX: backend sends crop as string ("2","5","3"), so use String key lookup
+    const cropLabelsStr = {
+      "0": "Groundnut",
+      "1": "Maize",
+      "2": "Mustard",
+      "3": "Pea",
+      "4": "Pearl Millet",
+      "5": "Potato",
+      "6": "Rice",
+    };
 
-  setWeather({
-    temp: data.temperature,
-    humidity: data.humidity,
-    rainfall: data.rainfall,
-    city: weatherData.name
-  });
+    setRecommendations(
+      data.top_3_crops.map((item) => ({
+        crop: cropLabelsStr[String(item.crop)] || item.crop,
+        confidence: item.confidence,
+      }))
+    );
+
+    setWeather({
+      temp: data.temperature,
+      humidity: data.humidity,
+      rainfall: data.rainfall,
+      city: weatherData.name,
+    });
 
   } catch (err) {
     console.error(err);
-    alert("Prediction failed");
+    alert("Prediction failed: " + err.message);
   } finally {
     setIsAnalyzing(false);
   }

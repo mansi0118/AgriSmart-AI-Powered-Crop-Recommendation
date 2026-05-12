@@ -31,10 +31,11 @@ function CropSuggestionUI() {
       [e.target.name]: e.target.value
     });
   };
-
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
+    try{
     const res = await fetch(`${API_BASE}/api/users/predict/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -43,13 +44,25 @@ function CropSuggestionUI() {
 
     let data = {};
 
-try {
-  data = await res.json();
-} catch (err) {
-  console.error("Invalid JSON:", err);
-}
+    try {
+      data = await res.json();
+    } catch (err) {
+      console.error("Invalid JSON:", err);
+      alert("Server error, please try again");
+      return;
+    }
+    if (!res.ok) {
+      alert(data.error || "Prediction failed");
+      return;
+    }
     setResult(data);
-  };
+  } catch (err) {
+    console.error("Network error:", err);
+    alert("Network error, please check your connection");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ✅ SAFE DATA HANDLING
   const chartData =
@@ -113,7 +126,7 @@ try {
 
             <div className="form-group">
               <label>pH <span className="unit">(0–14)</span></label>
-              <input type="number" step="0.1" name="ph " onChange={handleChange} required />
+              <input type="number" step="0.1" name="ph" onChange={handleChange} required />
             </div>
 
             <div className="form-group">
@@ -133,9 +146,9 @@ try {
 
           </div>
 
-          <button type="submit" className="crop-btn">
-            🚀 Get Recommendation
-          </button>
+          <button type="submit" className="crop-btn" disabled={loading}>
+          {loading ? "⏳ Analyzing..." : "🚀 Get Recommendation"}
+        </button>
         </form>
       </div>
 
@@ -226,7 +239,7 @@ try {
                   {chartData.map((entry, index) => (
                     <Cell
                       key={index}
-                      fill={entry.name === topCrop.crop ? "#22c55e" : "#93c5fd"}
+                      fill={entry.name === (cropLabels[topCrop?.crop] || topCrop?.crop) ? "#22c55e" : "#93c5fd"}
                     />
                   ))}
                 </Bar>
