@@ -1,4 +1,3 @@
-import pickle
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,6 +16,7 @@ from .serializers import SignupSerializer, LoginSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import sys
 import os
+import joblib
 from pathlib import Path
 import numpy as np
 
@@ -333,21 +333,15 @@ class ForgotPasswordView(APIView):
 
         return Response({"message": "Reset link sent to your email ✅"})
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = settings.BASE_DIR
 
-model_path = os.path.join(
-    BASE_DIR,
-    'crop_ml',
-    'models',
-    'season_model.pkl'
+crop_model = joblib.load(
+    os.path.join(BASE_DIR, "crop_ml", "models", "crop_recommendation_model.pkl")
 )
-crop_model = None
 
-try:
-    with open(model_path, "rb") as f:
-        crop_model = pickle.load(f)
-except Exception as e:
-    print("Model loading error:", e)
+label_encoder = joblib.load(
+    os.path.join(BASE_DIR, "crop_ml", "models", "label_encoder.pkl")
+)
 
 # =========================
 # 🌱 SOIL HEALTH API
@@ -446,8 +440,10 @@ def predict(request):
         top_3_crops = []
 
         for idx in top_indices:
+            crop_name = label_encoder.inverse_transform([classes[idx]])[0]
+
             top_3_crops.append({
-                "crop": str(classes[idx]),
+                "crop": str(crop_name),
                 "confidence": round(float(probabilities[idx] * 100), 2)
             })
 
