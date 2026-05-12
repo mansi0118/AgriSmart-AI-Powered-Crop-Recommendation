@@ -13,6 +13,15 @@ import {
   LayoutDashboard, CloudRain, Wheat, Navigation, X, LogOut, 
   Database, FileText, Download} from "lucide-react";
 import "./Users.css";
+const cropLabels = {
+  0: "groundnut",
+  1: "maize",
+  2: "mustard",
+  3: "pea",
+  4: "pearl millet",
+  5: "potato",
+  6: "rice"
+};
 // --- Leaflet Icon Fix ---
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -86,7 +95,11 @@ const handleGenerate = async () => {
       alert("Please enter location");
       return;
     }
-
+    const nearestSoil = soilData.find(
+      (s) =>
+        Math.abs(s.Latitude - parseFloat(inputLat)) < 0.02 &&
+        Math.abs(s.Longitude - parseFloat(inputLng)) < 0.02
+    );
     const weatherRes = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}&appid=${WEATHER_API}&units=metric`
     );
@@ -94,51 +107,42 @@ const handleGenerate = async () => {
       throw new Error("Weather fetch failed");
     }
     const weatherData = await weatherRes.json();
-
     const payload = {
-      N: 90,
-      P: 42,
-      K: 43,
-      ph: 6.5,
+      N: nearestSoil?.n || 120,
+      P: nearestSoil?.p || 40,
+      K: nearestSoil?.k || 40,
+      ph: nearestSoil?.pH || 6.5,
       temperature: weatherData.main.temp,
       humidity: weatherData.main.humidity,
       rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0
     };
 
-    const res = await fetch(`${API_BASE}/api/users/predict/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload)
-    });
-
     let data = {};
 
-try {
-  data = await res.json();
-} catch (err) {
-  console.error("Invalid JSON:", err);
-}
+    try {
+      data = await res.json();
+    } catch (err) {
+      console.error("Invalid JSON:", err);
+    }
 
     if (!res.ok) {
       alert(data.error || "Prediction failed");
       return;
     }
 
-    setRecommendations([
-      {
-        crop: data.crop,
-        confidence: 95
-      }
-    ]);
+    setRecommendations(
+    data.top_3_crops.map((item) => ({
+      crop: cropLabels[item.crop] || item.crop,
+      confidence: item.confidence
+    }))
+  );
 
-    setWeather({
-      temp: weatherData.main.temp,
-      humidity: weatherData.main.humidity,
-      rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0,
-      city: weatherData.name
-    });
+  setWeather({
+    temp: data.temperature,
+    humidity: data.humidity,
+    rainfall: data.rainfall,
+    city: weatherData.name
+  });
 
   } catch (err) {
     console.error(err);
@@ -982,19 +986,19 @@ const getInitials = (name) => {
 
                                 let data = {};
 
-try {
-  data = await res.json();
-} catch (err) {
-  console.error("Invalid JSON:", err);
-}
+                                try {
+                                  data = await res.json();
+                                } catch (err) {
+                                  console.error("Invalid JSON:", err);
+                                }
 
-                                setSoilPrediction([
-                                  {
-                                    crop: data.crop,
-                                    confidence: 95
-                                  }
-                                ]);
-                              } catch (err) {
+                                setSoilPrediction(
+                                  data.top_3_crops.map((item) => ({
+                                    crop: cropLabels[item.crop] || item.crop,
+                                    confidence: item.confidence
+                                  }))
+                                );
+                                                              } catch (err) {
                                 console.error("Prediction error:", err);
                               } finally {
                                 setLoadingPrediction(false);

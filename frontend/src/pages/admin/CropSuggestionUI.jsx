@@ -2,17 +2,26 @@ import { useState } from "react";
 import "./CropSuggestionUI.css";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 const API_BASE = process.env.REACT_APP_API_URL;
+const cropLabels = {
+  0: "groundnut",
+  1: "maize",
+  2: "mustard",
+  3: "pea",
+  4: "pearl millet",
+  5: "potato",
+  6: "rice"
+};
 function CropSuggestionUI() {
 
   const [formData, setFormData] = useState({
-    Nitrogen: "",
-    Phosphorus: "",
-    Potassium: "",
-    Ph: "",
-    state: "",
-    district: "",
-    city: ""
-  });
+  N: "",
+  P: "",
+  K: "",
+  ph: "",
+  state: "",
+  district: "",
+  city: ""
+});
 
   const [result, setResult] = useState(null);
 
@@ -45,7 +54,7 @@ try {
   // ✅ SAFE DATA HANDLING
   const chartData =
   result?.top_3_crops?.map((rec) => ({
-    name: rec.crop,
+    name: cropLabels[rec.crop] || rec.crop,
     confidence: rec.confidence,
   })) || [];
 
@@ -89,22 +98,22 @@ try {
 
             <div className="form-group">
               <label>Nitrogen <span className="unit">(kg/ha)</span></label>
-              <input type="number" name="Nitrogen" step="0.01" onChange={handleChange} required />
+              <input type="number" name="N" step="0.01" onChange={handleChange} required />
             </div>
 
             <div className="form-group">
               <label>Phosphorus <span className="unit">(kg/ha)</span></label>
-              <input type="number" name="Phosphorus" step="0.01" onChange={handleChange} required />
+              <input type="number" name="P" step="0.01" onChange={handleChange} required />
             </div>
 
             <div className="form-group">
               <label>Potassium <span className="unit">(kg/ha)</span></label>
-              <input type="number" name="Potassium" step="0.01" onChange={handleChange} required />
+              <input type="number" name="K" step="0.01" onChange={handleChange} required />
             </div>
 
             <div className="form-group">
               <label>pH <span className="unit">(0–14)</span></label>
-              <input type="number" step="0.1" name="Ph" onChange={handleChange} required />
+              <input type="number" step="0.1" name="ph " onChange={handleChange} required />
             </div>
 
             <div className="form-group">
@@ -131,7 +140,7 @@ try {
       </div>
 
       {/* RESULT */}
-      {result && result.recommendations && (
+      {result && result.top_3_crops && (
         <div className="result-section">
           <div className="three-block">
 
@@ -139,10 +148,10 @@ try {
             <div className="crop-card-ui">
               <h5 className="crop-title">📊 Input Summary</h5>
 
-              <p><strong>N:</strong> {formData.Nitrogen}</p>
-              <p><strong>P:</strong> {formData.Phosphorus}</p>
-              <p><strong>K:</strong> {formData.Potassium}</p>
-              <p><strong>pH:</strong> {formData.Ph}</p>
+              <p><strong>N:</strong> {formData.N}</p>
+              <p><strong>P:</strong> {formData.P}</p>
+              <p><strong>K:</strong> {formData.K}</p>
+              <p><strong>pH:</strong> {formData.ph}</p>
               <p><strong>State:</strong> {formData.state}</p>
               <p><strong>District:</strong> {formData.district}</p>
               <p><strong>City:</strong> {formData.city}</p>
@@ -164,7 +173,7 @@ try {
                     {index === 0 && "🥇 "}
                     {index === 1 && "🥈 "}
                     {index === 2 && "🥉 "}
-                    {rec.crop}
+                    {cropLabels[rec.crop] || rec.crop}
                   </strong>
 
                   <div className="progress-bar-ui">
@@ -198,7 +207,7 @@ try {
           <div className="top-crop-card">
             🏆 Top Crop:
               <strong>
-                {topCrop?.crop || "N/A"}
+                {cropLabels[topCrop?.crop] || topCrop?.crop || "N/A"}
               </strong>
               ({topCrop?.confidence || 0}%)
           </div>

@@ -12,7 +12,15 @@ import {
   Database
 } from "lucide-react";
 import "./ResearcherDashboard.css";
-
+const cropLabels = {
+  0: "groundnut",
+  1: "maize",
+  2: "mustard",
+  3: "pea",
+  4: "pearl millet",
+  5: "potato",
+  6: "rice"
+};
 // --- Leaflet Icon Fix ---
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -246,15 +254,21 @@ try {
         }
 
         const weatherData = await weatherRes.json();
+        const nearestSoil = soilData.find(
+          (s) =>
+            Math.abs(s.Latitude - parseFloat(inputLat)) < 0.02 &&
+            Math.abs(s.Longitude - parseFloat(inputLng)) < 0.02
+        );
 
         const payload = {
-          N: 90,
-          P: 42,
-          K: 43,
-          ph: 6.5,
-          temperature: weatherData.main.temp,
-          humidity: weatherData.main.humidity,
-          rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0
+          N: nearestSoil?.n ?? 0,
+          P: nearestSoil?.p ?? 0,
+          K: nearestSoil?.k ?? 0,
+          ph: nearestSoil?.pH ?? 7,
+
+          temperature: weatherData.main?.temp ?? 0,
+          humidity: weatherData.main?.humidity ?? 0,
+          rainfall: weatherData.rain?.["1h"] ?? 0
         };
 
         const res = await fetch(`${API_BASE}/api/users/predict/`, {
@@ -278,17 +292,17 @@ try {
           return;
         }
 
-        setRecommendations([
-          {
-            crop: data.crop,
-            confidence: 95
-          }
-        ]);
+        setRecommendations(
+          data.top_3_crops.map((item) => ({
+            crop: cropLabels[item.crop] || item.crop,
+            confidence: item.confidence
+          }))
+        );
 
         setWeather({
-          temp: weatherData.main.temp,
-          humidity: weatherData.main.humidity,
-          rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0,
+          temp: data.temperature,
+          humidity: data.humidity,
+          rainfall: data.rainfall,
           city: weatherData.name
         });
 
@@ -788,17 +802,17 @@ try {
                                 });
                                 let data = {};
 
-try {
-  data = await res.json();
-} catch (err) {
-  console.error("Invalid JSON:", err);
-}
-                                setSoilPrediction([
-                                  {
-                                    crop: data.crop,
-                                    confidence: 95
-                                  }
-                                ]);
+                                try {
+                                  data = await res.json();
+                                } catch (err) {
+                                  console.error("Invalid JSON:", err);
+                                }
+                                setSoilPrediction(
+                                  data.top_3_crops.map((item) => ({
+                                    crop: cropLabels[item.crop] || item.crop,
+                                    confidence: item.confidence
+                                  }))
+                                );
                               } catch (err) {
                                 console.error("Prediction error:", err);
                               } finally {
