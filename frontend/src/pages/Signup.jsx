@@ -67,7 +67,9 @@ const Signup = () => {
       setOtpLoading(true);
       const res = await fetch(`${API_BASE}/api/accounts/send-otp/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" ,
+        },
+
         body: JSON.stringify({ email: form.email }),
       });
 
@@ -141,7 +143,8 @@ const Signup = () => {
     try {
       const res = await fetch(`${API_BASE}/api/users/signup/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+         },
         body: JSON.stringify({
           email: form.email,
           password: form.password.trim(),

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./CropSuggestionUI.css";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-
+const API_BASE = process.env.REACT_APP_API_URL;
 function CropSuggestionUI() {
 
   const [formData, setFormData] = useState({
@@ -26,13 +26,19 @@ function CropSuggestionUI() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("${API_BASE}/api/users/predict/", {
+    const res = await fetch(`${API_BASE}/api/users/predict/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData)
     });
 
-    const data = await res.json();
+    let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
     setResult(data);
   };
 

@@ -17,7 +17,8 @@ const ForgotPassword = () => {
     try {
       const res = await fetch(`${API_BASE}/api/users/forgot-password/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" ,
+        },
         body: JSON.stringify({
           email: email.trim()
         }),

@@ -4,6 +4,7 @@ import { toast , ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./SoilHealthUI.css";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";
+const API_BASE = process.env.REACT_APP_API_URL;
 function SoilHealthUI() {
 
   const [formData, setFormData] = useState({
@@ -85,7 +86,7 @@ function SoilHealthUI() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("${API_BASE}/api/users/soil-health/", {
+    const res = await fetch(`${API_BASE}/api/users/soil-health/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -93,7 +94,13 @@ function SoilHealthUI() {
       body: JSON.stringify(formData)
     });
 
-    const data = await res.json();
+    let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
     const score = data.soil_health;
 
     const getCategory = (score) => {

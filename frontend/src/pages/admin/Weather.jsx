@@ -24,7 +24,13 @@ const Weather = () => {
       const res = await fetch(
         `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${API_KEY}`
       );
-      const data = await res.json();
+      let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
       setWeather(data);
       setCity(data.city.name);
     });

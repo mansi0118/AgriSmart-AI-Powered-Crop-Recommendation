@@ -386,39 +386,54 @@ def soil_health_api(request):
 def predict(request):
     try:
         data = request.data
+        N = float(data.get("N", 0))
+        P = float(data.get("P", 0))
+        K = float(data.get("K", 0))
+        temperature = float(data.get("temperature", 0))
+        humidity = float(data.get("humidity", 0))
+        ph = float(data.get("ph", 0))
+        rainfall = float(data.get("rainfall", 0))
 
-        required_fields = [
-            "N",
-            "P",
-            "K",
-            "temperature",
-            "humidity",
-            "ph",
-            "rainfall"
-        ]
+        # Engineered Features
+        season = 1
 
-        if not all(field in data for field in required_fields):
-            return Response(
-                {"error": "Missing required fields"},
-                status=400
-            )
+        npk_total = N + P + K
 
+        soil_fertility = (N + P + K) / 3
+
+        n_p_ratio = N / (P + 1)
+
+        n_k_ratio = N / (K + 1)
+
+        p_k_ratio = P / (K + 1)
+
+        water_index = humidity + rainfall
+
+        gdd_approx = temperature * 30
+
+        features = [[
+            N,
+            P,
+            K,
+            temperature,
+            humidity,
+            ph,
+            rainfall,
+            season,
+            npk_total,
+            soil_fertility,
+            n_p_ratio,
+            n_k_ratio,
+            p_k_ratio,
+            water_index,
+            gdd_approx
+        ]]
         if crop_model is None:
             return Response(
                 {"error": "Crop model not loaded"},
                 status=500
             )
-
-        features = [[
-            float(data.get("N")),
-            float(data.get("P")),
-            float(data.get("K")),
-            float(data.get("temperature")),
-            float(data.get("humidity")),
-            float(data.get("ph")),
-            float(data.get("rainfall")),
-        ]]
-
+        
         prediction = crop_model.predict(features)
 
         return Response({

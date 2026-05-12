@@ -130,7 +130,13 @@ export default function ResearcherDashboard() {
             throw new Error("Weather API failed");
           }
 
-          const data = await res.json();
+          let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
 
           setDashboardWeather({
             temp: data.main?.temp,
@@ -159,10 +165,16 @@ export default function ResearcherDashboard() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/users/fields/`, {
-        headers: { Authorization: `Token ${token}` }
+        headers: { "Content-Type": "application/json", Authorization: `Token ${token}` }
       });
       if (!res.ok) throw new Error("Failed to fetch fields");
-      const data = await res.json();
+      let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
       const formatted = data.map(f => ({
         id: f.id,
         name: f.field_name,
@@ -199,7 +211,13 @@ export default function ResearcherDashboard() {
           lng: parseFloat(newField.lng)
         })
       });
-      const data = await res.json();
+      let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
       console.log("Saved:", data);
       fetchFields(); // refresh from DB
       setShowModal(false);
@@ -247,7 +265,13 @@ export default function ResearcherDashboard() {
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
+        let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
 
         if (!res.ok) {
           alert(data.error || "Prediction failed");
@@ -339,7 +363,13 @@ export default function ResearcherDashboard() {
     if (!place.trim()) { alert("Please enter a location"); return; }
     try {
       const res = await fetch(`${API_BASE}/api/users/geocode/?place=${place}`);
-      const data = await res.json();
+      let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
       if (data.error) { alert(data.error); return; }
       setInputLat(data.lat);
       setInputLng(data.lon);
@@ -364,7 +394,8 @@ export default function ResearcherDashboard() {
     try {
       const res = await fetch(`${API_BASE}/api/users/logout/`, {
         method: "POST",
-        credentials: "include"
+        credentials: "include",
+        headers: {Authorization: `Token ${localStorage.getItem("token")}`} // ✅ include token in logout request,
       });
       if (res.ok) {
         localStorage.clear();
@@ -755,7 +786,13 @@ export default function ResearcherDashboard() {
                                     rainfall: weatherData.rain ? weatherData.rain["1h"] || 0 : 0
                                   })
                                 });
-                                const data = await res.json();
+                                let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
                                 setSoilPrediction([
                                   {
                                     crop: data.crop,

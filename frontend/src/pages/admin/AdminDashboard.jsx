@@ -1,7 +1,11 @@
+import Users from "./Users";
 import React, { useState, useEffect, useRef } from "react";
 import {
-  LayoutDashboard,Settings,
-  FileText, Loader2
+  LayoutDashboard,
+  Settings as SettingsIcon,
+  FileText,
+  Loader2,
+  Users as UsersIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -193,7 +197,9 @@ useEffect(() => {
     }
   })
     .then(r => r.json())
-    .then(data => setResearchers(data))
+    .then(data => {
+  setResearchers(Array.isArray(data) ? data : []);
+})
     .catch(() => setResearchers([]));
 
 }, [navigate]);
@@ -222,7 +228,7 @@ const getInitials = (name) => {
           </nav>
           <div className="sidebar-footer">
             <div className={`nav-item ${tab === "settings" ? "active" : ""}`} onClick={() => setTab("settings")}>
-              <Settings size={18} /> <span>Settings</span>
+              <SettingsIcon size={18} /> <span>Settings</span>
             </div>
            <button className="logout-btn" onClick={handleLogout}>
               Logout
@@ -248,7 +254,7 @@ const getInitials = (name) => {
                     <div className="val">{verified ? verified.length : "—"}</div>
                     <div className="sub green">Registered accounts</div>
                   </div>
-                  <div className="icon-box green"><Users size={24} /></div>
+                  <div className="icon-box green"><UsersIcon size={24} /></div>
                 </div>
                 <div className="stat-card">
                   <div>
@@ -265,33 +271,59 @@ const getInitials = (name) => {
                   <h3>Researcher Dataset Links</h3>
                   <span className="badge sky">{researchers ? researchers.length : "…"} Total</span>
                 </div>
-                {researchers === null
-                  ? <div className="loading"><Loader2 size={18} className="spin" /> Loading…</div>
-                  : researchers.length === 0
-                    ? <p style={{ color:"var(--muted)", fontSize:14 }}>No datasets yet.</p>
-                    : <table>
-                        <thead><tr><th>ID</th><th>Name</th><th>Link</th><th>User ID</th><th>Action</th></tr></thead>
-                        <tbody>
-                          {researchers.map(r => (
-                           <tr key={r.id}>
-                              <td className="dim">#{r.id}</td>
-                              <td className="bold">{r.name}</td>
-                              <td>
-                                <a href={r.url} target="_blank" rel="noopener noreferrer" className="link-btn">
-                                  View link
-                                </a>
-                              </td>
-                              <td className="dim">{r.user_id}</td>
-                              <td>
-                                <button className="delete-btn" onClick={() => deleteResearcher(r.id)}>
-                                  Delete
-                                </button>
-                              </td>
-                            </tr> 
-                          ))}
-                        </tbody>
-                      </table>
-                }
+                {researchers === null ? (
+                  <div className="loading">
+                    <Loader2 size={18} className="spin" /> Loading…
+                  </div>
+                ) : !Array.isArray(researchers) || researchers.length === 0 ? (
+                  <p style={{ color: "var(--muted)", fontSize: 14 }}>
+                    No datasets yet.
+                  </p>
+                ) : (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Link</th>
+                        <th>User ID</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {researchers.map((r) => (
+                        <tr key={r.id}>
+                          <td className="dim">#{r.id}</td>
+
+                          <td className="bold">{r.name}</td>
+
+                          <td>
+                            <a
+                              href={r.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="link-btn"
+                            >
+                              View link
+                            </a>
+                          </td>
+
+                          <td className="dim">{r.user_id}</td>
+
+                          <td>
+                            <button
+                              className="delete-btn"
+                              onClick={() => deleteResearcher(r.id)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               <div className="card">

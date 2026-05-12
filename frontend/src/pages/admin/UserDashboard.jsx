@@ -44,7 +44,13 @@ export default function UserDashboard() {
           }
         );
 
-        const data = await res.json();
+        let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
 
         console.log("Research API:", data);
 
@@ -102,12 +108,18 @@ const handleGenerate = async () => {
     const res = await fetch(`${API_BASE}/api/users/predict/`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
+    let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
 
     if (!res.ok) {
       alert(data.error || "Prediction failed");
@@ -216,7 +228,13 @@ const handleSaveSettings = async () => {
   try {
     const res = await fetch(`${API_BASE}/api/users/geocode/?place=${place}`);
 
-    const data = await res.json();
+    let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
 
     if (data.error) {
       alert(data.error);
@@ -242,7 +260,13 @@ const handleSaveSettings = async () => {
           `https://api.openweathermap.org/data/2.5/weather?lat=${inputLat}&lon=${inputLng}&appid=${WEATHER_API}&units=metric`
         );
 
-        const data = await res.json();
+        let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
 
         setDashboardWeather({
           temp: data.main?.temp,
@@ -280,11 +304,18 @@ const fetchFields = async () => {
 
     const res = await fetch(`${API_BASE}/api/users/fields/`, {
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Token ${token}`,
       },
     });
 
-    const data = await res.json();
+    let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
 
     const formatted = Array.isArray(data)
       ? data.map((f) => ({
@@ -426,6 +457,9 @@ useEffect(() => {
     await fetch(`${API_BASE}/api/users/logout/`, {
       method: "POST",
       credentials: "include",
+      headers: {
+        Authorization: `Token ${localStorage.getItem("token")}`,
+      },
     });
 
   } catch (err) {
@@ -946,7 +980,13 @@ const getInitials = (name) => {
                                   })
                                 });
 
-                                const data = await res.json();
+                                let data = {};
+
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Invalid JSON:", err);
+}
 
                                 setSoilPrediction([
                                   {
