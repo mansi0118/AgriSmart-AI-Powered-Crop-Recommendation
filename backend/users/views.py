@@ -440,13 +440,17 @@ def predict(request):
         top_3_crops = []
 
         for idx in top_indices:
-            crop_name = label_encoder.inverse_transform([classes[idx]])[0]
+            crop_name = str(classes[idx])
+        try:
+            crop_name = label_encoder.inverse_transform([int(classes[idx])])[0]
+        except:
+            pass
 
             top_3_crops.append({
                 "crop": str(crop_name),
                 "confidence": round(float(probabilities[idx] * 100), 2)
             })
-
+        print("TOP 3:", top_3_crops)
         return Response({
             "success": True,
             "temperature": temperature,
