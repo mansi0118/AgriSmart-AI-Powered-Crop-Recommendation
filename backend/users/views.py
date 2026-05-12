@@ -339,9 +339,6 @@ crop_model = joblib.load(
     os.path.join(BASE_DIR, "crop_ml", "models", "crop_recommendation_model.pkl")
 )
 
-label_encoder = joblib.load(
-    os.path.join(BASE_DIR, "crop_ml", "models", "label_encoder.pkl")
-)
 
 # =========================
 # 🌱 SOIL HEALTH API
@@ -402,9 +399,9 @@ def predict(request):
 
         p_k_ratio = P / (K + 1)
 
-        water_index = humidity + rainfall
+        water_index = (humidity + rainfall) / 2
 
-        gdd_approx = temperature * 30
+        gdd_approx = temperature * 1.5
 
         features = [[
             N,
@@ -414,14 +411,14 @@ def predict(request):
             humidity,
             ph,
             rainfall,
-            season,
             npk_total,
             soil_fertility,
             n_p_ratio,
             n_k_ratio,
             p_k_ratio,
             water_index,
-            gdd_approx
+            gdd_approx,
+            season
         ]]
         if crop_model is None:
             return Response(
@@ -441,11 +438,7 @@ def predict(request):
 
         for idx in top_indices:
             crop_name = str(classes[idx])
-        try:
-            crop_name = label_encoder.inverse_transform([int(classes[idx])])[0]
-        except:
-            pass
-
+    
             top_3_crops.append({
                 "crop": str(crop_name),
                 "confidence": round(float(probabilities[idx] * 100), 2)
