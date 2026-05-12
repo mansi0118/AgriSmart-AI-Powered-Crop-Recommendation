@@ -18,6 +18,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 import sys
 import os
 from pathlib import Path
+import numpy as np
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -434,11 +435,28 @@ def predict(request):
                 status=500
             )
         
-        prediction = crop_model.predict(features)
+        prediction = crop_model.predict(features)[0]
+
+        probabilities = crop_model.predict_proba(features)[0]
+
+        classes = crop_model.classes_
+
+        top_indices = np.argsort(probabilities)[::-1][:3]
+
+        top_3_crops = []
+
+        for idx in top_indices:
+            top_3_crops.append({
+                "crop": str(classes[idx]),
+                "confidence": round(float(probabilities[idx] * 100), 2)
+            })
 
         return Response({
             "success": True,
-            "crop": str(prediction[0])
+            "temperature": temperature,
+            "humidity": humidity,
+            "rainfall": rainfall,
+            "top_3_crops": top_3_crops
         })
 
     except Exception as e:

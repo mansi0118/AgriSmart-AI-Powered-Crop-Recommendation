@@ -5,8 +5,18 @@ import numpy as np
 BASE_DIR = os.path.dirname(__file__)
 
 # ===== LOAD MODELS =====
+soil_model = None
 
-soil_model = joblib.load(os.path.join(BASE_DIR, "models", "soil_health_model.pkl"))
+def get_soil_model():
+    global soil_model
+
+    if soil_model is None:
+        soil_model = joblib.load(
+            os.path.join(BASE_DIR, "models", "soil_health_model.pkl")
+        )
+
+    return soil_model
+model = get_soil_model()
 season_model = joblib.load(os.path.join(BASE_DIR, "models", "season_model.pkl"))
 nutrient_model = joblib.load(os.path.join(BASE_DIR, "models", "nutrient_deficiency_model.pkl"))
 
