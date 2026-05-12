@@ -41,6 +41,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'users',
     'accounts',
     'rest_framework',
@@ -51,8 +52,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
-    'rest_framework_simplejwt.token_blacklist'
+
+    'rest_framework_simplejwt.token_blacklist',
 
 ]
 AUTH_USER_MODEL = 'users.User'
@@ -72,6 +73,7 @@ SIMPLE_JWT = {
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -79,7 +81,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.common.CommonMiddleware'
 ]
 
 ROOT_URLCONF = 'backend.urls'
