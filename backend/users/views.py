@@ -16,7 +16,7 @@ from .serializers import SignupSerializer, LoginSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import sys
 import os
-import joblib
+import pickle
 from pathlib import Path
 import numpy as np
 
@@ -333,11 +333,25 @@ class ForgotPasswordView(APIView):
 
         return Response({"message": "Reset link sent to your email ✅"})
 
-BASE_DIR = settings.BASE_DIR
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-crop_model = joblib.load(
-    os.path.join(BASE_DIR, "crop_ml", "models", "crop_recommendation_model.pkl")
+model_path = os.path.join(
+    BASE_DIR,
+    'crop_ml',
+    'models',
+    'season_model.pkl'
 )
+
+crop_model = None
+
+try:
+    with open(model_path, "rb") as f:
+        crop_model = pickle.load(f)
+
+    print("✅ Crop model loaded successfully")
+
+except Exception as e:
+    print("❌ Model loading error:", e)
 
 
 # =========================
