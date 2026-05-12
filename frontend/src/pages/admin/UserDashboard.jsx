@@ -31,11 +31,38 @@ export default function UserDashboard() {
   const [user, setUser] = useState({ name: "", email: "", role: "" });
 
   useEffect(() => {
-  fetch(`${API_BASE}/api/users/researchers/`)
-    .then(res => res.json())
-    .then(data => setResearchData(data))
-    .catch(err => console.error("Research fetch error:", err));
-}, []);
+    const fetchResearchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+          `${API_BASE}/api/users/researchers/`,
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        console.log("Research API:", data);
+
+        // ✅ ensure array
+        if (Array.isArray(data)) {
+          setResearchData(data);
+        } else {
+          setResearchData([]);
+        }
+
+      } catch (err) {
+        console.error("Research fetch error:", err);
+        setResearchData([]);
+      }
+    };
+
+    fetchResearchData();
+  }, []);
 useEffect(() => {
   const token = localStorage.getItem("token");
 
@@ -247,28 +274,36 @@ const handleSaveSettings = async () => {
   const [nutrient, setNutrient] = useState("N"); 
 const [settings, setSettings] = useState({ name: "", email: "" });
 const [isSaving, setIsSaving] = useState(false);
-  const fetchFields = async () => {
-  const token = localStorage.getItem("token");
+const fetchFields = async () => {
+  try {
+    const token = localStorage.getItem("token");
 
-  const res = await fetch(`${API_BASE}/api/users/fields/`, {
-    headers: {
-      Authorization: `Token ${token}`,
-    },
-  });
+    const res = await fetch(`${API_BASE}/api/users/fields/`, {
+      headers: {
+        Authorization: `Token ${token}`,
+      },
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  const formatted = data.map(f => ({
-    id: f.id,
-    name: f.field_name,
-    crop: f.crop || "Fallow",
-    area: f.area || "0",
-    lat: parseFloat(f.lat),
-    lng: parseFloat(f.lng),
-    color: "green"
-  }));
+    const formatted = Array.isArray(data)
+      ? data.map((f) => ({
+          id: f.id,
+          name: f.field_name,
+          crop: f.crop || "Fallow",
+          area: f.area || "0",
+          lat: parseFloat(f.lat),
+          lng: parseFloat(f.lng),
+          color: "green",
+        }))
+      : [];
 
-  setFields(formatted);
+    setFields(formatted);
+
+  } catch (err) {
+    console.error("Fields fetch error:", err);
+    setFields([]);
+  }
 };
 useEffect(() => {
   fetchFields();
@@ -360,7 +395,13 @@ useEffect(() => {
       }),
     });
 
-    const data = await res.json();
+    let data = {};
+
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("Invalid server response");
+    }
     console.log("Saved:", data);
 
     // 🔥 IMPORTANT → DB se fresh fetch
@@ -375,32 +416,26 @@ useEffect(() => {
   }
 };
   const handleLogout = async () => {
-  const confirmLogout = window.confirm("Are you sure you want to logout?");
+  const confirmLogout = window.confirm(
+    "Are you sure you want to logout?"
+  );
+
   if (!confirmLogout) return;
 
   try {
-    const res = await fetch(`${API_BASE}/api/users/logout/`, {
+    await fetch(`${API_BASE}/api/users/logout/`, {
       method: "POST",
-      credentials: "include", // important for session
+      credentials: "include",
     });
 
-    const data = await res.json();
-    console.log("Logout response:", data);
-
-    if (res.ok) {
-      // 🔥 token bhi delete karo (important)
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // 🔥 redirect
-      window.location.href = "/login";
-    } else {
-      alert("Logout failed ❌");
-    }
   } catch (err) {
     console.error("Logout error:", err);
-    alert("Server error ❌");
   }
+
+  localStorage.clear();
+  sessionStorage.clear();
+
+  window.location.href = "/login";
 };
 const getInitials = (name) => {
   if (!name) return "U";
@@ -689,7 +724,7 @@ const getInitials = (name) => {
               </tr>
             </thead>
             <tbody>
-              {researchData.length === 0 ? (
+              {!Array.isArray(researchData) || researchData.length === 0 ? (
                 <tr>
                   <td colSpan="4" style={{ textAlign: "center", padding: "40px", color: "#888" }}>
                     <div style={{ fontSize: "24px", marginBottom: "10px" }}>📁</div>
@@ -697,7 +732,7 @@ const getInitials = (name) => {
                   </td>
                 </tr>
               ) : (
-                researchData.map((item) => (
+                  researchData.map((item) => (
                   <tr key={item.id} className="table-row-hover" style={{ borderBottom: "1px solid #f9f9f9", fontSize: "14px" }}>
                     <td style={{ padding: "15px 0", color: "#666" }}>{item.date}</td>
                     <td style={{ padding: "15px 0", fontWeight: "600", color: "#374151" }}>
