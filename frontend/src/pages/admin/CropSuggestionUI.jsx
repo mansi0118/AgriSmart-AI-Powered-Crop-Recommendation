@@ -43,15 +43,14 @@ try {
   };
 
   // ✅ SAFE DATA HANDLING
-  const chartData = result?.recommendations?.map((rec) => ({
+  const chartData =
+  result?.top_3_crops?.map((rec) => ({
     name: rec.crop,
-    confidence: rec.confidence
+    confidence: rec.confidence,
   })) || [];
 
   // ✅ TOP CROP
-  const topCrop = result?.recommendations?.reduce((prev, curr) =>
-    curr.confidence > prev.confidence ? curr : prev
-  );
+  const topCrop = result?.top_3_crops?.[0];
 
   return (
     <div className="crop-container">
@@ -157,50 +156,51 @@ try {
               <p><strong>Rainfall:</strong> {result.rainfall} mm</p>
             </div>
             <div className="crop-card-ui">
-            <h5 className="crop-title">🌾 Crop Recommendations</h5>
+              <h5 className="crop-title">🌾 Crop Recommendations</h5>
 
-            {result.recommendations.map((rec, index) => (
-              <div key={index} style={{ marginBottom: "15px" }}>
+              {result.top_3_crops.map((rec, index) => (
+                <div key={index} style={{ marginBottom: "15px" }}>
+                  <strong>
+                    {index === 0 && "🥇 "}
+                    {index === 1 && "🥈 "}
+                    {index === 2 && "🥉 "}
+                    {rec.crop}
+                  </strong>
 
-                <strong>
-                  {index === 0 && "🥇"}
-                  {index === 1 && "🥈"}
-                  {index === 2 && "🥉"}
-                  {rec.crop}
-                </strong>
+                  <div className="progress-bar-ui">
+                    <div
+                      className="progress-fill"
+                      style={{
+                        width: `${rec.confidence}%`,
+                        background:
+                          rec.confidence > 80
+                            ? "#22c55e"
+                            : rec.confidence > 60
+                            ? "#facc15"
+                            : "#ef4444",
+                      }}
+                    ></div>
+                  </div>
 
-                <div className="progress-bar-ui">
-                  <div
-                    className="progress-fill"
-                    style={{
-                      width: `${rec.confidence}%`,
-                      background:
-                        rec.confidence > 80
-                          ? "#22c55e"
-                          : rec.confidence > 60
-                          ? "#facc15"
-                          : "#ef4444"
-                    }}
-                  ></div>
-                </div>
-
-                <small>
-                  {rec.confidence}% - {
-                    rec.confidence > 80
+                  <small>
+                    {rec.confidence}% —{" "}
+                    {rec.confidence > 80
                       ? "Highly Suitable 🌟"
                       : rec.confidence > 60
                       ? "Moderate 👍"
-                      : "Low ⚠️"
-                  }
-                </small>
-              </div>
-            ))}
-
-          </div>
+                      : "Low ⚠️"}
+                  </small>
+                </div>
+              ))}
+            </div>
           </div>
           {/* 🏆 TOP CROP */}
           <div className="top-crop-card">
-            🏆 Top Crop: <strong>{topCrop.crop}</strong> ({topCrop.confidence}%)
+            🏆 Top Crop:
+              <strong>
+                {topCrop?.crop || "N/A"}
+              </strong>
+              ({topCrop?.confidence || 0}%)
           </div>
 
           {/* GRAPH */}
