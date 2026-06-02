@@ -16,7 +16,7 @@ def send_otp(request):
     try:
         sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
         message = Mail(
-            from_email='jeeya.dhiman.2006@gmail.com',
+            from_email=settings.DEFAULT_FROM_EMAIL,
             to_emails=email,
             subject='AgriSmart OTP',
             plain_text_content=f'Your OTP is {otp}'
