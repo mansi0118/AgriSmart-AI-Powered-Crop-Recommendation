@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
-
+from corsheaders.defaults import default_headers
 from decouple import config
 from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,11 +42,11 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 INSTALLED_APPS = [
     'corsheaders',
+    'django.contrib.admin',
     'users',
     'accounts',
     'rest_framework',
     'rest_framework.authtoken',
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -87,19 +87,13 @@ ROOT_URLCONF = 'backend.urls'
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
     "https://agri-smart-ai-powered-crop-recommen.vercel.app",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://agri-smart-ai-powered-crop-recommen.vercel.app",
 ]
-CORS_ALLOW_HEADERS = [
-    "authorization",
-    "content-type",
-    "accept",
-    "origin",
-    "x-requested-with",
-]
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "content-type", "authorization",]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
