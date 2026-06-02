@@ -483,41 +483,16 @@ def geocode_api(request):
                 status=400
             )
 
-        url = "https://nominatim.openstreetmap.org/search"
+        api_key = settings.OPENWEATHER_API_KEY
 
-        headers = {
-            "User-Agent": "AgriSmart/1.0"
-        }
-
-        params = {
-            "q": place,
-            "format": "json",
-            "limit": 1
-        }
-
-        response = requests.get(
-            url,
-            params=params,
-            headers=headers,
-            timeout=10
+        url = (
+            f"http://api.openweathermap.org/geo/1.0/direct"
+            f"?q={place}&limit=1&appid={api_key}"
         )
 
-        print("STATUS:", response.status_code)
-        print("TEXT:", response.text[:300])
+        response = requests.get(url, timeout=10)
 
-        if response.status_code != 200:
-            return Response(
-                {"error": "Geocoding service unavailable"},
-                status=500
-            )
-
-        try:
-            data = response.json()
-        except Exception:
-            return Response(
-                {"error": response.text},
-                status=500
-            )
+        data = response.json()
 
         if not data:
             return Response(
@@ -526,8 +501,8 @@ def geocode_api(request):
             )
 
         return Response({
-            "lat": float(data[0]["lat"]),
-            "lon": float(data[0]["lon"])
+            "lat": data[0]["lat"],
+            "lon": data[0]["lon"]
         })
 
     except Exception as e:
