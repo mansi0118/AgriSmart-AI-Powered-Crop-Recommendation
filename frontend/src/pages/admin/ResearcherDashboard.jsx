@@ -7,9 +7,18 @@ import 'leaflet/dist/leaflet.css';
 import { useMapEvents } from "react-leaflet";
 import L from 'leaflet';
 import {
-  Cloud, Map, Settings,
-  LayoutDashboard, CloudRain, Wheat, Navigation, X, LogOut,
-  Database
+  Cloud,
+  Map,
+  Settings,
+  LayoutDashboard,
+  CloudRain,
+  Wheat,
+  Navigation,
+  X,
+  LogOut,
+  Database,
+  FileText,
+  Download
 } from "lucide-react";
 import "./ResearcherDashboard.css";
 const cropLabels = {
@@ -140,11 +149,11 @@ export default function ResearcherDashboard() {
 
           let data = {};
 
-try {
-  data = await res.json();
-} catch (err) {
-  console.error("Invalid JSON:", err);
-}
+          try {
+            data = await res.json();
+          } catch (err) {
+            console.error("Invalid JSON:", err);
+          }
 
           setDashboardWeather({
             temp: data.main?.temp,
@@ -221,11 +230,11 @@ try {
       });
       let data = {};
 
-try {
-  data = await res.json();
-} catch (err) {
-  console.error("Invalid JSON:", err);
-}
+      try {
+        data = await res.json();
+      } catch (err) {
+        console.error("Invalid JSON:", err);
+      }
       console.log("Saved:", data);
       fetchFields(); // refresh from DB
       setShowModal(false);
