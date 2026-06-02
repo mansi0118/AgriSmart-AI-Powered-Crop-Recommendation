@@ -45,7 +45,7 @@ const Signup = () => {
 
   try {
     const res = await fetch(
-      `${process.env.REACT_APP_DJANGO_URL}/api/accounts/send-otp/`,
+      `${process.env.REACT_APP_API_URL}/api/accounts/send-otp/`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,7 +79,7 @@ const Signup = () => {
   const verifyOtp = async () => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_DJANGO_URL}/api/accounts/verify-otp/`,
+        `${process.env.REACT_APP_API_URL}/api/accounts/verify-otp/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -114,7 +114,7 @@ const Signup = () => {
 
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_DJANGO_URL}/api/users/signup/`,
+        `${process.env.REACT_APP_API_URL}/api/users/signup/`,
         {
           method: "POST",
           headers: {
