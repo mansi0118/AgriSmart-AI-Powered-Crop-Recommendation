@@ -483,7 +483,7 @@ def geocode_api(request):
                 status=400
             )
 
-        api_key = settings.OPENWEATHER_API_KEY
+        api_key = settings.REACT_APP_WEATHER_API_KEY
 
         url = (
             f"http://api.openweathermap.org/geo/1.0/direct"
