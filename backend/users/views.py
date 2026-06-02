@@ -476,24 +476,62 @@ def predict(request):
 def geocode_api(request):
     try:
         place = request.GET.get("place")
+
         if not place:
-            return Response({"error": "Place is required"}, status=400)
-        url = f"https://nominatim.openstreetmap.org/search?q={place}&format=json&limit=1"
+            return Response(
+                {"error": "Place is required"},
+                status=400
+            )
+
+        url = "https://nominatim.openstreetmap.org/search"
 
         headers = {
-            "User-Agent": "AgriSmart"
+            "User-Agent": "AgriSmart/1.0"
         }
 
-        response = requests.get(url, headers=headers,timeout=10)
-        data = response.json()
+        params = {
+            "q": place,
+            "format": "json",
+            "limit": 1
+        }
+
+        response = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=10
+        )
+
+        print("STATUS:", response.status_code)
+        print("TEXT:", response.text[:300])
+
+        if response.status_code != 200:
+            return Response(
+                {"error": "Geocoding service unavailable"},
+                status=500
+            )
+
+        try:
+            data = response.json()
+        except Exception:
+            return Response(
+                {"error": response.text},
+                status=500
+            )
 
         if not data:
-            return Response({"error": "Location not found"}, status=404)
+            return Response(
+                {"error": "Location not found"},
+                status=404
+            )
 
         return Response({
-            "lat": data[0]["lat"],
-            "lon": data[0]["lon"]
+            "lat": float(data[0]["lat"]),
+            "lon": float(data[0]["lon"])
         })
 
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response(
+            {"error": str(e)},
+            status=500
+        )
